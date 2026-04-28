@@ -1,3 +1,28 @@
+<?php
+session_start();
+require_once('conexao.php');
+
+if(isset($_POST['btn-primary'])) {
+    $novo_user = $mysqli->real_escape_string($_POST['reg_usuario']);
+    $nova_senha = $mysqli->real_escape_string($_POST['reg_senha']);
+    $novo_tipo = $mysqli->real_escape_string($_POST['reg_tipo']);
+    $novo_nome = $mysqli->real_escape_string($_POST['reg_nome']);
+
+    
+    $check = $mysqli->query("SELECT * FROM login WHERE usuario = '$novo_user'");
+    if($check->num_rows > 0) {
+        $_SESSION['alerta'] = "Esse nome de usuário já existe! Escolha outro.";
+        $_SESSION['tipo_alerta'] = "erro";
+    } else {
+        $mysqli->query("INSERT INTO login (usuario, senha_usu, tipo_usu, nome_usu) VALUES ('$novo_user', '$nova_senha', '$novo_tipo', '$novo_nome')");
+        $_SESSION['alerta'] = "Cadastro realizado com sucesso! Agora você já pode fazer o login.";
+        $_SESSION['tipo_alerta'] = "sucesso";
+        header("Location: usuarios.php");
+        exit();
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -20,37 +45,48 @@
                 funcionários.</p>
         </div>
 
+        <?php if(isset($_SESSION['alerta'])): ?>
+            <div style="padding: 15px; margin-bottom: 20px; border-radius: 8px; color: white; font-weight: bold; background-color: <?php echo ($_SESSION['tipo_alerta'] == 'sucesso') ? '#2ecc71' : '#e74c3c'; ?>;">
+                <?php 
+                    echo $_SESSION['alerta']; 
+                    unset($_SESSION['alerta']); 
+                    unset($_SESSION['tipo_alerta']);
+                ?>
+            </div>
+        <?php endif; ?>
+
         <div class="card">
             <h3
                 style="color: var(--azul-med); margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
                 <i class='bx bx-user-plus'></i> Novo Usuário
             </h3>
-            <form action="#" method="POST">
+            
+            <form action="" method="POST">
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Nome Completo *</label>
-                        <input type="text" placeholder="Digite o nome completo" required>
+                        <input type="text" name="reg_nome" placeholder="Digite o nome completo" required>
                     </div>
                     <div class="form-group">
                         <label>Usuário (Login) *</label>
-                        <input type="text" placeholder="Ex: carlos.med" required>
+                        <input type="text" name="reg_usuario" placeholder="Ex: carlos.med" required>
                     </div>
                     <div class="form-group">
                         <label>Senha *</label>
-                        <input type="password" placeholder="Digite a senha" required>
+                        <input type="password" name="reg_senha" placeholder="Digite a senha" required>
                     </div>
                     <div class="form-group">
                         <label>Perfil *</label>
-                        <select required>
+                        <select name="reg_tipo" required>
                             <option value="">Selecione o perfil...</option>
-                            <option value="admin">Administrador</option>
-                            <option value="medico">Médico</option>
-                            <option value="recepcao">Recepção</option>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Médico">Médico</option>
+                            <option value="Recepção">Recepção</option>
                         </select>
                     </div>
                 </div>
                 <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-                    <button type="submit" class="btn-primary">CRIAR CONTA</button>
+                    <button type="submit" name="btn-primary" class="btn-primary">CRIAR CONTA</button>
                 </div>
             </form>
         </div>
