@@ -26,7 +26,7 @@
                 <i class='bx bx-file'></i>
                 <span>Relatórios</span>
             </a>
-            <a href="<?= $root ?>index.html" class="sair">
+            <a href="<?= $root ?>../index.php" class="sair">
                 <i class='bx bx-log-out'></i>
                 <span>Sair</span>
             </a>

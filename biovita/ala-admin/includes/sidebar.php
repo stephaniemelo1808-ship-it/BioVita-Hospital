@@ -8,7 +8,7 @@
     </div>
 
     <div class="sidebar-logo">
-        <img src="img/logo_biovita.png" alt="Logo Bio Vita" class="main-logo">
+        <img src="../img/logo_biovita.png" alt="Logo Bio Vita" class="main-logo">
         <h2 class="logo-text">MedSystem</h2>
     </div>
 
@@ -28,7 +28,7 @@
             <span>Pacientes</span>
         </a>
 
-        <a href="index.php" style="margin-top: 50px; color: #ffbaba;">
+        <a href="../index.php" style="margin-top: 50px; color: #ffbaba;">
             <i class='bx bx-log-out'></i>
             <span>Sair</span>
         </a>

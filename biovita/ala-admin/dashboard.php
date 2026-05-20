@@ -1,3 +1,76 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['tipo_usu']) || ($_SESSION['tipo_usu'] !== 'Administrador' && $_SESSION['tipo_usu'] !== 'Admin')) {
+    header("Location: ../login.php?erro=acesso_negado");
+    exit();
+}
+
+require_once '../conexao.php';
+
+
+$total_pacientes = 0;
+$resultado_pacientes = $mysqli->query("SELECT COUNT(*) as total FROM registro_usuario");
+if ($resultado_pacientes) {
+    $row_pacientes = $resultado_pacientes->fetch_assoc();
+    $total_pacientes = $row_pacientes['total'];
+}
+
+$total_medicos = 0;
+$resultado_medicos = $mysqli->query("SELECT COUNT(*) as total FROM login WHERE tipo_usu = 'Médico'");
+if ($resultado_medicos) {
+    $row_medicos = $resultado_medicos->fetch_assoc();
+    $total_medicos = $row_medicos['total'];
+}
+
+
+$total_consultas = 0;
+$resultado_consultas = $mysqli->query("SELECT COUNT(*) as total FROM consultas");
+if ($resultado_consultas) {
+    $row_consultas = $resultado_consultas->fetch_assoc();
+    $total_consultas = $row_consultas['total'];
+}
+
+$total_novos = 0;
+$resultado_novos = $mysqli->query("SELECT COUNT(*) as total FROM consultas WHERE DATE(data_hora_consul) >= CURDATE()");
+if ($resultado_novos) {
+    $row_novos = $resultado_novos->fetch_assoc();
+    $total_novos = $row_novos['total'];
+}
+
+
+$usuarios_ativos = [];
+$id_logado = $_SESSION['id'];
+$resultado_ativos = $mysqli->query("SELECT nome_usu, tipo_usu FROM login WHERE id_log != '$id_logado' LIMIT 3");
+if ($resultado_ativos) {
+    while($row = $resultado_ativos->fetch_assoc()) {
+        $usuarios_ativos[] = $row;
+    }
+}
+
+
+$dados_semana = [0, 0, 0, 0, 0, 0, 0];
+
+
+$sql_grafico = "SELECT WEEKDAY(data_hora_consul) as dia_semana, COUNT(*) as total 
+                FROM consultas 
+                WHERE data_hora_consul IS NOT NULL 
+                GROUP BY WEEKDAY(data_hora_consul)";
+
+$resultado_grafico = $mysqli->query($sql_grafico);
+
+if ($resultado_grafico) {
+    while ($row = $resultado_grafico->fetch_assoc()) {
+        $dia_index = (int)$row['dia_semana'];
+        if ($dia_index >= 0 && $dia_index <= 6) {
+            $dados_semana[$dia_index] = $row['total'];
+        }
+    }
+}
+
+$dados_grafico_js = implode(', ', $dados_semana);
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -7,7 +80,6 @@
     <link rel="stylesheet" href="../css/style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    */aaaaaaa/*
     <style>
         .dashboard-grid {
             display: grid;
@@ -44,7 +116,7 @@
         .chart-container { flex: 2; min-width: 400px; }
         .actions-container { flex: 1; min-width: 280px; }
 
-        /* Estilo do Botao de Exportaçao d Dados */
+        /* Estilo do Botão de Exportação de Dados */
         .export-btn {
             background: #f8f9fa;
             border: 1px solid #ddd;
@@ -89,19 +161,34 @@
 
     <div class="dashboard-grid">
         <div class="stat-card">
-            <div class="stat-info"><h3>Pacientes</h3><p>1,284</p></div>
+            <div class="stat-info">
+                <h3>Pacientes</h3>
+                <p><?= number_format($total_pacientes, 0, ',', '.') ?></p>
+            </div>
             <i class='bx bx-user stat-icon'></i>
         </div>
+        
         <div class="stat-card purple">
-            <div class="stat-info"><h3>Médicos</h3><p>14</p></div>
+            <div class="stat-info">
+                <h3>Médicos</h3>
+                <p><?= $total_medicos ?></p>
+            </div>
             <i class='bx bx-plus-medical stat-icon'></i>
         </div>
+        
         <div class="stat-card green">
-            <div class="stat-info"><h3>Consultas</h3><p>42</p></div>
+            <div class="stat-info">
+                <h3>Consultas</h3>
+                <p><?= $total_consultas ?></p>
+            </div>
             <i class='bx bx-calendar-check stat-icon'></i>
         </div>
+        
         <div class="stat-card yellow">
-            <div class="stat-info"><h3>Novos</h3><p>08</p></div>
+            <div class="stat-info">
+                <h3>Novos Agendamentos</h3>
+                <p><?= str_pad($total_novos, 2, '0', STR_PAD_LEFT) ?></p>
+            </div>
             <i class='bx bx-trending-up stat-icon'></i>
         </div>
     </div>
@@ -137,14 +224,19 @@
             <div class="card">
                 <h3 style="margin-bottom: 15px; color: #2C3E50; font-size: 1rem;">Sessões Ativas</h3>
                 <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+                    
                     <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-                        <span>Dr. Carlos Eduardo</span>
+                        <span>Você (<?= $_SESSION['usuario'] ?>)</span>
                         <span class="status-badge bg-online">Online</span>
                     </li>
-                    <li style="display: flex; justify-content: space-between; padding: 8px 0;">
-                        <span>Ana Souza (Recepção)</span>
+
+                    <?php foreach($usuarios_ativos as $user): ?>
+                    <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
+                        <span><?= $user['nome_usu'] ?> (<?= $user['tipo_usu'] ?>)</span>
                         <span class="status-badge bg-online">Online</span>
                     </li>
+                    <?php endforeach; ?>
+                    
                 </ul>
             </div>
         </div>
@@ -152,11 +244,10 @@
 </main>
 
 <script>
-    // 1. DADOS DO GRÁFICO
     const labelsSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-    const dadosAtendimento = [45, 58, 42, 65, 55, 22, 15];
+    
+    const dadosAtendimento = [<?= $dados_grafico_js ?>];
 
-    // 2. VISUAL DO GRÁFICO
     const ctx = document.getElementById('graficoFluxo').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(44, 130, 181, 0.3)');
@@ -190,25 +281,22 @@
         }
     });
 
-    // 3. FUNÇÃO DE EXTRAÇÃO DE DADOS (CSV/EXCEL)
     function exportarParaExcel() {
-        // o conteúdo do CSV
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // \uFEFF ajuda o Excel com acentos
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
         csvContent += "Dia da Semana;Total de Atendimentos\n";
 
         labelsSemana.forEach((dia, index) => {
             csvContent += `${dia};${dadosAtendimento[index]}\n`;
         });
 
-        // Link de download temporário
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
         link.setAttribute("download", "fluxo_atendimento_biovita.csv");
         document.body.appendChild(link);
 
-        link.click(); // Dispara o download
-        document.body.removeChild(link); // Limpa a memória 
+        link.click();
+        document.body.removeChild(link); 
     }
 </script>
 

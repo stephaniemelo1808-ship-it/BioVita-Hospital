@@ -34,7 +34,7 @@
 
                 <div class="form-group">
                     <label>Tipo de Relatório</label>
-                    <select name="tipo_relatorio">
+                    <select name="tipo_relatorio" onmousedown="event.stopPropagation()" style="pointer-events: auto !important; user-select: auto !important; position: relative; z-index: 9999;">
                         <option value="pacientes">Lista de Pacientes Cadastrados</option>
                         <option value="atendimentos">Resumo de Atendimentos</option>
                         <option value="usuarios">Log de Atividades de Usuários</option>
@@ -43,7 +43,7 @@
 
                 <div class="form-group">
                     <label>Formato de Saída</label>
-                    <select name="formato">
+                    <select name="formato" onmousedown="event.stopPropagation()" style="pointer-events: auto !important; user-select: auto !important; position: relative; z-index: 9999;">
                         <option value="pdf">Documento PDF (.pdf)</option>
                         <option value="excel">Planilha Excel (.xlsx)</option>
                     </select>

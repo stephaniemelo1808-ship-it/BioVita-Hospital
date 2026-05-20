@@ -11,12 +11,23 @@ if(isset($_POST['btn_login'])) {
     if($sql_query->num_rows == 1) {
         $user = $sql_query->fetch_assoc();
         
-    
         $_SESSION['id'] = $user['id_log'];
         $_SESSION['usuario'] = $user['nome_usu'];
+        $_SESSION['tipo_usu'] = $user['tipo_usu'];
+
+        if($user['tipo_usu'] === 'Médico') {
+            header("Location: ala_medica/medico.php");
+            exit(); 
+            
+        } elseif ($user['tipo_usu'] === 'Administrador' || $user['tipo_usu'] === 'Admin') {
+            header("Location: ala-admin/dashboard.php");
+            exit();
+            
+        } else {
+            header("Location: ala-admin/dashboard.php");
+            exit();
+        }
         
-        header("Location: dashboard.php");
-        exit();
     } else {
         $erro = "Usuário ou senha incorretos!";
     }
@@ -82,7 +93,7 @@ if(isset($_POST['btn_login'])) {
 <body>
 
     <div class="login-card">
-        <a href="usuarios.php"
+        <a href="index.php"
             style="text-decoration: none; color: #7f8c8d; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; margin-bottom: 20px;">
             <i class='bx bx-left-arrow-alt'></i> Voltar ao início
         </a>
