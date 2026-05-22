@@ -8,7 +8,6 @@ if (!isset($_SESSION['tipo_usu']) || ($_SESSION['tipo_usu'] !== 'Administrador' 
 
 require_once '../conexao.php';
 
-
 $total_pacientes = 0;
 $resultado_pacientes = $mysqli->query("SELECT COUNT(*) as total FROM registro_usuario");
 if ($resultado_pacientes) {
@@ -22,7 +21,6 @@ if ($resultado_medicos) {
     $row_medicos = $resultado_medicos->fetch_assoc();
     $total_medicos = $row_medicos['total'];
 }
-
 
 $total_consultas = 0;
 $resultado_consultas = $mysqli->query("SELECT COUNT(*) as total FROM consultas");
@@ -38,7 +36,6 @@ if ($resultado_novos) {
     $total_novos = $row_novos['total'];
 }
 
-
 $usuarios_ativos = [];
 $id_logado = $_SESSION['id'];
 $resultado_ativos = $mysqli->query("SELECT nome_usu, tipo_usu FROM login WHERE id_log != '$id_logado' LIMIT 3");
@@ -48,9 +45,7 @@ if ($resultado_ativos) {
     }
 }
 
-
 $dados_semana = [0, 0, 0, 0, 0, 0, 0];
-
 
 $sql_grafico = "SELECT WEEKDAY(data_hora_consul) as dia_semana, COUNT(*) as total 
                 FROM consultas 
@@ -116,7 +111,6 @@ $dados_grafico_js = implode(', ', $dados_semana);
         .chart-container { flex: 2; min-width: 400px; }
         .actions-container { flex: 1; min-width: 280px; }
 
-        /* Estilo do Botão de Exportação de Dados */
         .export-btn {
             background: #f8f9fa;
             border: 1px solid #ddd;
@@ -245,7 +239,6 @@ $dados_grafico_js = implode(', ', $dados_semana);
 
 <script>
     const labelsSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-    
     const dadosAtendimento = [<?= $dados_grafico_js ?>];
 
     const ctx = document.getElementById('graficoFluxo').getContext('2d');
@@ -281,22 +274,62 @@ $dados_grafico_js = implode(', ', $dados_semana);
         }
     });
 
+    // Função para exportar os DADOS DETALHADOS para Excel
     function exportarParaExcel() {
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
-        csvContent += "Dia da Semana;Total de Atendimentos\n";
+        // 1. Busca os dados diretamente do banco via PHP e coloca num array JS
+        const dadosDetalhes = [
+            <?php
+            $sql_detalhe = "SELECT c.data_hora_consul, p.nome as paciente, l.nome_usu as medico, c.tipo_consulta 
+                            FROM consultas c 
+                            JOIN registro_usuario p ON c.id_paciente = p.id 
+                            JOIN login l ON c.id_log_medico = l.id_log 
+                            ORDER BY c.data_hora_consul DESC LIMIT 100";
+            $res = $mysqli->query($sql_detalhe);
+            while($row = $res->fetch_assoc()) {
+                // Removemos quebras de linha/aspas que possam quebrar o JS
+                $data = date('d/m/Y H:i', strtotime($row['data_hora_consul']));
+                echo "{data:'$data', pac:'".addslashes($row['paciente'])."', med:'".addslashes($row['medico'])."', tipo:'".$row['tipo_consulta']."'},";
+            }
+            ?>
+        ];
 
-        labelsSemana.forEach((dia, index) => {
-            csvContent += `${dia};${dadosAtendimento[index]}\n`;
+        // 2. Cria a tabela HTML com os dados detalhados
+        let htmlTable = `
+            <meta charset="utf-8">
+            <table border="1">
+                <tr style="background-color: #2C82B5; color: white; font-weight: bold;">
+                    <th>Data/Hora</th>
+                    <th>Paciente</th>
+                    <th>Médico</th>
+                    <th>Especialidade</th>
+                </tr>
+        `;
+
+        dadosDetalhes.forEach((item) => {
+            htmlTable += `
+                <tr>
+                    <td>${item.data}</td>
+                    <td>${item.pac}</td>
+                    <td>${item.med}</td>
+                    <td>${item.tipo}</td>
+                </tr>
+            `;
         });
 
-        const encodedUri = encodeURI(csvContent);
+        htmlTable += "</table>";
+
+        // 3. Força o download como arquivo .xls
+        const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel' });
+        const url = URL.createObjectURL(blob);
+        
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "fluxo_atendimento_biovita.csv");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "consultas_detalhadas_biovita.xls");
         document.body.appendChild(link);
 
         link.click();
-        document.body.removeChild(link); 
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 </script>
 

@@ -9,7 +9,7 @@ if (!isset($_SESSION['tipo_usu']) || $_SESSION['tipo_usu'] !== 'Médico') {
 
 // 2. CONEXÃO COM O BANCO E VARIÁVEIS
 require_once '../conexao.php';
-$id_login_medico = $_SESSION['id']; 
+$id_login_medico = $_SESSION['id'];
 
 // =======================================================
 // A) PROCESSAR ATUALIZAÇÃO DA CONSULTA
@@ -27,12 +27,12 @@ if (isset($_POST['status_consulta']) && isset($_POST['id_consulta'])) {
         $sql_update .= ", data_retorno = NULL";
     }
     $sql_update .= " WHERE id_consulta = '$id_cons' AND id_log_medico = '$id_login_medico'";
-    
+
     if ($mysqli->query($sql_update)) {
         $_SESSION['alerta'] = "Prontuário atualizado com sucesso!";
         $_SESSION['tipo_alerta'] = "sucesso";
     }
-    header("Location: medico.php?aba=tab-consultas"); 
+    header("Location: medico.php?aba=tab-consultas");
     exit();
 }
 
@@ -62,15 +62,16 @@ $resultado_pacientes = $mysqli->query($sql_pacientes);
 
 $lista_pacientes = [];
 if ($resultado_pacientes) {
-    while($row = $resultado_pacientes->fetch_assoc()) {
+    while ($row = $resultado_pacientes->fetch_assoc()) {
         $row['convenio'] = $row['convenio_usu'] ?? 'SUS / Não inf.';
         $row['tipo_sanguineo'] = $row['tipo_sanguineo'] ?? 'Não inf.';
-        $row['id_usu'] = $row['id']; 
-        $lista_pacientes[$row['id']] = $row; 
+        $row['id_usu'] = $row['id'];
+        $lista_pacientes[$row['id']] = $row;
     }
 }
 
-function calculaIdade(?string $dataNasc) {
+function calculaIdade(?string $dataNasc)
+{
     if (!$dataNasc) return 'N/A';
     $data = new DateTime($dataNasc);
     $agora = new DateTime();
@@ -85,19 +86,24 @@ $sql_consultas = "SELECT * FROM consultas WHERE id_log_medico = '$id_login_medic
 $resultado_consultas = $mysqli->query($sql_consultas);
 
 $todas_consultas = [];
-$consultas_hoje = []; 
+$consultas_hoje = [];
 $eventos_calendario = []; // Array novo para alimentar o Calendário JS
-$total_hoje = 0; $realizadas_hoje = 0; $proximas_hoje = 0;
-$qtd_concluida = 0; $qtd_agendada = 0; $qtd_andamento = 0; $qtd_cancelada = 0;
+$total_hoje = 0;
+$realizadas_hoje = 0;
+$proximas_hoje = 0;
+$qtd_concluida = 0;
+$qtd_agendada = 0;
+$qtd_andamento = 0;
+$qtd_cancelada = 0;
 
 if ($resultado_consultas) {
-    while($row = $resultado_consultas->fetch_assoc()) {
+    while ($row = $resultado_consultas->fetch_assoc()) {
         $todas_consultas[] = $row;
-        
+
         $data_iso = date('Y-m-d', strtotime($row['data_hora_consul']));
         $hora = date('H:i', strtotime($row['data_hora_consul']));
         $pac_nome = $lista_pacientes[$row['id_paciente']]['nome'] ?? 'Desconhecido';
-        
+
         // Alimenta o array do calendário
         $eventos_calendario[] = [
             'data' => $data_iso,
@@ -105,15 +111,22 @@ if ($resultado_consultas) {
             'paciente' => $pac_nome,
             'status' => $row['status_consulta']
         ];
-        
+
         if ($data_iso == $hoje) {
-            $consultas_hoje[] = $row; 
-            
+            $consultas_hoje[] = $row;
+
             $total_hoje++;
-            if ($row['status_consulta'] == 'Concluída') { $realizadas_hoje++; $qtd_concluida++; }
-            elseif ($row['status_consulta'] == 'Agendada' || $row['status_consulta'] == 'Confirmada') { $proximas_hoje++; $qtd_agendada++; }
-            elseif ($row['status_consulta'] == 'Em Andamento') { $qtd_andamento++; }
-            elseif ($row['status_consulta'] == 'Cancelada') { $qtd_cancelada++; }
+            if ($row['status_consulta'] == 'Concluída') {
+                $realizadas_hoje++;
+                $qtd_concluida++;
+            } elseif ($row['status_consulta'] == 'Agendada' || $row['status_consulta'] == 'Confirmada') {
+                $proximas_hoje++;
+                $qtd_agendada++;
+            } elseif ($row['status_consulta'] == 'Em Andamento') {
+                $qtd_andamento++;
+            } elseif ($row['status_consulta'] == 'Cancelada') {
+                $qtd_cancelada++;
+            }
         }
     }
 }
@@ -131,7 +144,9 @@ $resultado_grafico = $mysqli->query($sql_grafico);
 if ($resultado_grafico) {
     while ($row = $resultado_grafico->fetch_assoc()) {
         $dia_index = (int)$row['dia_semana'];
-        if ($dia_index >= 0 && $dia_index <= 6) { $dados_semana[$dia_index] = $row['total']; }
+        if ($dia_index >= 0 && $dia_index <= 6) {
+            $dados_semana[$dia_index] = $row['total'];
+        }
     }
 }
 $dados_grafico_js = implode(', ', $dados_semana);
@@ -149,21 +164,48 @@ $lista_medicamentos = [
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Área do Médico - MedSystem Bio Vita</title>
-    <link rel="stylesheet" href="medico.css"> 
+    <link rel="stylesheet" href="medico.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
         /* CHIPS DE FILTRO */
-        .chip-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-        .chip-btn { background: var(--cinza-card); border: 1px solid var(--cinza-borda); color: var(--texto-secundario); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-        .chip-btn:hover { border-color: var(--azul-primario); color: var(--azul-primario); }
-        .chip-btn.active { background: var(--azul-primario); color: white; border-color: var(--azul-primario); box-shadow: 0 2px 8px rgba(44, 130, 181, 0.3); }
-        
+        .chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .chip-btn {
+            background: var(--cinza-card);
+            border: 1px solid var(--cinza-borda);
+            color: var(--texto-secundario);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chip-btn:hover {
+            border-color: var(--azul-primario);
+            color: var(--azul-primario);
+        }
+
+        .chip-btn.active {
+            background: var(--azul-primario);
+            color: white;
+            border-color: var(--azul-primario);
+            box-shadow: 0 2px 8px rgba(44, 130, 181, 0.3);
+        }
+
         /* CALENDÁRIO FIXES (Caso falte no CSS principal) */
         .calendario-grid {
             display: grid;
@@ -174,25 +216,79 @@ $lista_medicamentos = [
             border-radius: 12px;
             overflow: hidden;
         }
-        .calendario-dia-header { background: #f8fafc; color: var(--texto-secundario); text-align: center; padding: 12px 5px; font-weight: 600; font-size: 0.9rem; }
-        .calendario-dia { background: white; min-height: 110px; padding: 8px; transition: all 0.2s ease; display: flex; flex-direction: column; }
-        .calendario-dia.outro-mes { background: #f8fafc; opacity: 0.6; }
-        .calendario-dia.hoje { background: #f0f7ff; }
-        .calendario-dia-numero { font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: var(--texto-principal); }
-        .calendario-dia.hoje .calendario-dia-numero { background: var(--azul-primario); color: white; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-        .cal-evento { font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; border: 1px solid rgba(0,0,0,0.05); }
+
+        .calendario-dia-header {
+            background: #f8fafc;
+            color: var(--texto-secundario);
+            text-align: center;
+            padding: 12px 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .calendario-dia {
+            background: white;
+            min-height: 110px;
+            padding: 8px;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendario-dia.outro-mes {
+            background: #f8fafc;
+            opacity: 0.6;
+        }
+
+        .calendario-dia.hoje {
+            background: #f0f7ff;
+        }
+
+        .calendario-dia-numero {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: var(--texto-principal);
+        }
+
+        .calendario-dia.hoje .calendario-dia-numero {
+            background: var(--azul-primario);
+            color: white;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .cal-evento {
+            font-size: 0.7rem;
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
+
 <body>
 
-<?php include('includes/sidebar-medico.php'); ?>
+    <?php include('includes/sidebar-medico.php'); ?>
 
-    <?php if(isset($_SESSION['alerta'])): ?>
+    <?php if (isset($_SESSION['alerta'])): ?>
         <div id="phpToast" style="position:fixed; top:20px; right:20px; background-color:#2ecc71; color:white; padding:15px 25px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.1); z-index:9999;">
             <i class='bx bx-check-circle'></i> <?= $_SESSION['alerta'] ?>
         </div>
-        <script>setTimeout(() => document.getElementById('phpToast').style.display = 'none', 3500);</script>
-        <?php unset($_SESSION['alerta']); unset($_SESSION['tipo_alerta']); ?>
+        <script>
+            setTimeout(() => document.getElementById('phpToast').style.display = 'none', 3500);
+        </script>
+        <?php unset($_SESSION['alerta']);
+        unset($_SESSION['tipo_alerta']); ?>
     <?php endif; ?>
 
     <div id="toast" class="toast"></div>
@@ -205,7 +301,7 @@ $lista_medicamentos = [
             </div>
             <div class="date-badge">
                 <i class='bx bx-calendar'></i>
-                <span><?= date('d/m/Y') ?></span> 
+                <span><?= date('d/m/Y') ?></span>
             </div>
         </div>
 
@@ -221,7 +317,7 @@ $lista_medicamentos = [
         <div id="tab-painel" class="tab-content <?= $aba_ativa == 'tab-painel' ? 'active' : '' ?>">
             <div class="stats-grid">
                 <div class="stat-card">
-                   <div class="stat-info">
+                    <div class="stat-info">
                         <h3>Consultas Hoje</h3>
                         <p><?= $total_hoje ?></p>
                     </div>
@@ -233,7 +329,7 @@ $lista_medicamentos = [
                         <h3>Próximas</h3>
                         <p><?= $proximas_hoje ?></p>
                     </div>
-                     <i class='bx bx-time stat-icon'></i>
+                    <i class='bx bx-time stat-icon'></i>
                 </div>
                 <div class="stat-card purple">
                     <div class="stat-info">
@@ -260,21 +356,21 @@ $lista_medicamentos = [
 
                     <div class="card">
                         <h3 class="card-title"><i class='bx bx-list-ul'></i> Próximas Consultas (Hoje)</h3>
-                        <?php foreach($consultas_hoje as $consulta): 
+                        <?php foreach ($consultas_hoje as $consulta):
                             $paciente = isset($lista_pacientes[$consulta['id_paciente']]) ? $lista_pacientes[$consulta['id_paciente']] : ['nome' => 'Paciente Desconhecido'];
                             $hora = date('H:i', strtotime($consulta['data_hora_consul']));
                             $statusClass = $consulta['status_consulta'] == 'Agendada' ? 'status-aguardando' : 'status-confirmada';
                         ?>
-                        <div class="consulta-item">
-                            <div class="consulta-info">
-                                <h4><?= $paciente['nome'] ?></h4>
-                                <span><i class='bx bx-time'></i> <?= $hora ?> - Rotina</span>
+                            <div class="consulta-item">
+                                <div class="consulta-info">
+                                    <h4><?= $paciente['nome'] ?></h4>
+                                    <span><i class='bx bx-time'></i> <?= $hora ?> - Rotina</span>
+                                </div>
+                                <span class="status-badge <?= $statusClass ?>"><?= $consulta['status_consulta'] ?></span>
                             </div>
-                            <span class="status-badge <?= $statusClass ?>"><?= $consulta['status_consulta'] ?></span>
-                        </div>
                         <?php endforeach; ?>
-                        
-                        <?php if(empty($consultas_hoje)): ?>
+
+                        <?php if (empty($consultas_hoje)): ?>
                             <p style="color: #7f8c8d; text-align: center; margin-top: 20px;">Nenhuma consulta agendada para a data de hoje.</p>
                         <?php endif; ?>
                     </div>
@@ -305,11 +401,11 @@ $lista_medicamentos = [
 
         <div id="tab-consultas" class="tab-content <?= $aba_ativa == 'tab-consultas' ? 'active' : '' ?>">
             <div class="layout-flex">
-                
+
                 <div style="width: 380px; min-width: 320px;">
                     <div class="card">
                         <h3 class="card-title" style="margin-bottom: 10px;"><i class='bx bx-filter-alt'></i> Filtros Visuais</h3>
-                        
+
                         <div class="form-group" style="margin-bottom: 5px;">
                             <label>Status da Consulta:</label>
                         </div>
@@ -337,7 +433,7 @@ $lista_medicamentos = [
                     </div>
 
                     <div style="max-height: 500px; overflow-y: auto;" id="listaPacientesConsulta">
-                        <?php foreach($todas_consultas as $consulta): 
+                        <?php foreach ($todas_consultas as $consulta):
                             $pac = isset($lista_pacientes[$consulta['id_paciente']]) ? $lista_pacientes[$consulta['id_paciente']] : ['nome' => 'Desconhecido', 'telefone' => '-', 'convenio' => '-'];
                             $hora = date('H:i', strtotime($consulta['data_hora_consul']));
                             $data_iso = date('Y-m-d', strtotime($consulta['data_hora_consul']));
@@ -345,25 +441,25 @@ $lista_medicamentos = [
                             $obsSegura = htmlspecialchars($consulta['observacoes'] ?? '');
                             $retorno = $consulta['data_retorno'] ?? '';
                         ?>
-                        <div class="paciente-item item-consulta" 
-                             data-id-consulta="<?= $consulta['id_consulta'] ?>"
-                             data-id-paciente="<?= $consulta['id_paciente'] ?>"
-                             data-nome="<?= htmlspecialchars($pac['nome']) ?>"
-                             data-convenio="<?= htmlspecialchars($pac['convenio']) ?>"
-                             data-telefone="<?= htmlspecialchars($pac['telefone']) ?>"
-                             data-data-iso="<?= $data_iso ?>"
-                             data-hora-full="<?= $data_br . ' ' . $hora ?>"
-                             data-obs="<?= $obsSegura ?>"
-                             data-retorno="<?= $retorno ?>"
-                             data-status="<?= $consulta['status_consulta'] ?>"
-                             onclick="selecionarAtendimento(this)">
-                            
-                            <strong><?= $pac['nome'] ?></strong>
-                            <span style="font-size: 0.85rem;"><i class='bx bx-calendar'></i> <?= $data_br ?> às <?= $hora ?></span>
-                            <span style="display:block; font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Status: <?= $consulta['status_consulta'] ?></span>
-                        </div>
+                            <div class="paciente-item item-consulta"
+                                data-id-consulta="<?= $consulta['id_consulta'] ?>"
+                                data-id-paciente="<?= $consulta['id_paciente'] ?>"
+                                data-nome="<?= htmlspecialchars($pac['nome']) ?>"
+                                data-convenio="<?= htmlspecialchars($pac['convenio']) ?>"
+                                data-telefone="<?= htmlspecialchars($pac['telefone']) ?>"
+                                data-data-iso="<?= $data_iso ?>"
+                                data-hora-full="<?= $data_br . ' ' . $hora ?>"
+                                data-obs="<?= $obsSegura ?>"
+                                data-retorno="<?= $retorno ?>"
+                                data-status="<?= $consulta['status_consulta'] ?>"
+                                onclick="selecionarAtendimento(this)">
+
+                                <strong><?= $pac['nome'] ?></strong>
+                                <span style="font-size: 0.85rem;"><i class='bx bx-calendar'></i> <?= $data_br ?> às <?= $hora ?></span>
+                                <span style="display:block; font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Status: <?= $consulta['status_consulta'] ?></span>
+                            </div>
                         <?php endforeach; ?>
-                        
+
                         <p id="msgNenhumEncontrado" style="color: #7f8c8d; text-align: center; padding: 20px; display: none;">Nenhuma consulta encontrada com estes filtros.</p>
                     </div>
                 </div>
@@ -372,7 +468,7 @@ $lista_medicamentos = [
                     <form method="POST" action="" class="card" id="consultaDetalhes">
                         <input type="hidden" name="id_consulta" id="form_id_consulta" value="">
                         <input type="hidden" name="id_paciente" id="form_id_paciente" value="">
-                        
+
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f0f5f9; padding-bottom: 15px; margin-bottom: 20px;">
                             <div style="display: flex; align-items: center; gap: 15px;">
                                 <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--azul-claro-bg); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--azul-primario);">
@@ -438,14 +534,14 @@ $lista_medicamentos = [
 
         <div id="tab-pacientes" class="tab-content <?= $aba_ativa == 'tab-pacientes' ? 'active' : '' ?>">
             <div class="pacientes-grid">
-                <?php foreach($lista_pacientes as $pac): ?>
-                <div class="paciente-card">
-                    <div class="paciente-avatar"><i class='bx bx-user'></i></div>
-                    <h4><?= $pac['nome'] ?></h4>
-                    <p><?= calculaIdade($pac['dt_nasc']) ?> anos | Tipo <?= $pac['tipo_sanguineo'] ?></p>
-                    <p><i class='bx bx-health'></i> <?= $pac['convenio'] ?></p>
-                    <p style="font-size: 0.75rem; margin-bottom: 15px;">Telefone: <?= $pac['telefone'] ?></p>
-                </div>
+                <?php foreach ($lista_pacientes as $pac): ?>
+                    <div class="paciente-card">
+                        <div class="paciente-avatar"><i class='bx bx-user'></i></div>
+                        <h4><?= $pac['nome'] ?></h4>
+                        <p><?= calculaIdade($pac['dt_nasc']) ?> anos | Tipo <?= $pac['tipo_sanguineo'] ?></p>
+                        <p><i class='bx bx-health'></i> <?= $pac['convenio'] ?></p>
+                        <p style="font-size: 0.75rem; margin-bottom: 15px;">Telefone: <?= $pac['telefone'] ?></p>
+                    </div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -454,48 +550,54 @@ $lista_medicamentos = [
             <div class="layout-flex">
                 <div class="flex-1">
                     <div class="card">
-                        <h3 class="card-title"><i class='bx bx-capsule'></i> Medicamentos para Prescrição</h3>
+                        <h3 class="card-title"><i class='bx bx-capsule'></i> 1. Selecione a Consulta</h3>
+                        <select id="select_consulta" class="form-control" style="width:100%; padding: 10px; margin-bottom: 15px;">
+                            <option value="">Escolha a consulta do paciente...</option>
+                            <?php
+                            // Puxa as consultas deste médico
+                            $cons_med = $mysqli->query("SELECT c.id_consulta, p.nome, c.data_hora_consul 
+                                                FROM consultas c 
+                                                JOIN registro_usuario p ON c.id_paciente = p.id 
+                                                WHERE c.id_log_medico = '$id_login_medico' 
+                                                ORDER BY c.data_hora_consul DESC LIMIT 20");
+                            while ($c = $cons_med->fetch_assoc()): ?>
+                                <option value="<?= $c['id_consulta'] ?>">
+                                    <?= date('d/m', strtotime($c['data_hora_consul'])) ?> - <?= $c['nome'] ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+
+                        <h3 class="card-title"><i class='bx bx-plus-medical'></i> 2. Adicionar Medicamentos</h3>
                         <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Medicamento</th>
-                                    <th>Tipo</th>
-                                    <th>Dosagem Padrão</th>
+                                    <th>Dosagem</th>
                                     <th>Ação</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach($lista_medicamentos as $med): ?>
-                                <tr>
-                                    <td><strong><?= $med['nome'] ?></strong></td>
-                                    <td><?= $med['tipo'] ?></td>
-                                    <td><?= $med['dosagem'] ?></td>
-                                    <td><button class="btn-sm btn-primary" onclick="adicionarMedicamento('<?= $med['nome'] ?>', '<?= $med['dosagem'] ?>', '<?= $med['instrucoes'] ?>')"><i class='bx bx-plus'></i></button></td>
-                                </tr>
+                                <?php foreach ($lista_medicamentos as $med): ?>
+                                    <tr>
+                                        <td><strong><?= $med['nome'] ?></strong></td>
+                                        <td><?= $med['dosagem'] ?></td>
+                                        <td><button class="btn-sm btn-primary" onclick="adicionarMedicamento('<?= $med['nome'] ?>', '<?= $med['dosagem'] ?>', '<?= $med['instrucoes'] ?>')"><i class='bx bx-plus'></i></button></td>
+                                    </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div style="width: 400px; min-width: 350px;">
+                <div style="width: 400px;">
                     <div class="card">
-                        <h3 class="card-title"><i class='bx bx-receipt'></i> Receituário Atual</h3>
-                        <div id="receituarioLista">
-                            <div class="receituario-item">
-                                <div>
-                                    <div class="med-nome">Selecione um medicamento</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-top: 15px;">
-                            <label>Observações Gerais</label>
-                            <textarea id="observacoes_receituario" placeholder="Instruções adicionais..."></textarea>
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">          
-                           <a href="#" class="btn-success" style="flex: 1; justify-content: center; text-decoration: none; display: flex; align-items: center;">
-                           <i class='bx bx-check-circle'></i> Finalizar Prescrição </a>
-                        </div>
+                        <h3 class="card-title"><i class='bx bx-receipt'></i> 3. Finalizar Receituário</h3>
+                        <form id="formPrescricao" method="POST" action="salvar_prescricao.php">
+                            <input type="hidden" name="id_consulta" id="input_id_consulta">
+                            <input type="hidden" name="lista_meds" id="input_lista_meds">
+                            <div id="receituarioLista"></div>
+                            <button type="submit" class="btn-success" style="width:100%; margin-top: 15px;">Salvar Prescrição</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -559,7 +661,28 @@ $lista_medicamentos = [
                             pointBorderColor: '#2C82B5'
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f5f5f5' } }, x: { grid: { display: false } } } }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#f5f5f5'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
                 });
             }
 
@@ -572,10 +695,20 @@ $lista_medicamentos = [
                         datasets: [{
                             data: [<?= $qtd_concluida ?>, <?= $qtd_agendada ?>, <?= $qtd_andamento ?>, <?= $qtd_cancelada ?>],
                             backgroundColor: ['#2ecc71', '#3498db', '#f1c40f', '#e74c3c'],
-                            borderWidth: 0, hoverOffset: 4
+                            borderWidth: 0,
+                            hoverOffset: 4
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
                 });
             }
         });
@@ -590,11 +723,15 @@ $lista_medicamentos = [
             const parent = botao.parentElement;
             parent.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
             botao.classList.add('active');
-            
+
             const valor = botao.getAttribute('data-valor');
-            if (tipo === 'status') { filtroAtualStatus = valor; }
-            if (tipo === 'periodo') { filtroAtualPeriodo = valor; }
-            
+            if (tipo === 'status') {
+                filtroAtualStatus = valor;
+            }
+            if (tipo === 'periodo') {
+                filtroAtualPeriodo = valor;
+            }
+
             aplicarFiltros();
         }
 
@@ -604,7 +741,7 @@ $lista_medicamentos = [
             const termoBusca = document.getElementById('buscaPaciente').value.toLowerCase();
             const itens = document.querySelectorAll('.item-consulta');
             let qtdVisiveis = 0;
-            
+
             let hojeData = new Date(dataHojeServidor + 'T00:00:00');
             let fimSemana = new Date(hojeData);
             fimSemana.setDate(hojeData.getDate() + 7);
@@ -615,10 +752,10 @@ $lista_medicamentos = [
                 let rawStatus = item.getAttribute('data-status');
                 const statusItem = rawStatus ? rawStatus.toLowerCase() : '';
                 const dataItem = item.getAttribute('data-data-iso');
-                
+
                 let mostraPorNome = nomeItem.includes(termoBusca);
                 let mostraPorStatus = (filtroAtualStatus === 'todas') || (filtroAtualStatus === statusItem);
-                
+
                 let mostraPorData = false;
                 if (filtroAtualPeriodo === 'todas') {
                     mostraPorData = true;
@@ -627,7 +764,7 @@ $lista_medicamentos = [
                 } else if (filtroAtualPeriodo === 'semana') {
                     mostraPorData = (dataItem >= dataHojeServidor && dataItem <= fimSemanaIso);
                 }
-                
+
                 if (mostraPorNome && mostraPorStatus && mostraPorData) {
                     item.style.display = 'block';
                     qtdVisiveis++;
@@ -635,9 +772,9 @@ $lista_medicamentos = [
                     item.style.display = 'none';
                 }
             });
-            
+
             const msg = document.getElementById('msgNenhumEncontrado');
-            if(msg) msg.style.display = (qtdVisiveis === 0) ? 'block' : 'none';
+            if (msg) msg.style.display = (qtdVisiveis === 0) ? 'block' : 'none';
         }
 
         // ----------------------------------------------------
@@ -684,10 +821,19 @@ $lista_medicamentos = [
                 eventosDoDia.forEach(ev => {
                     let corBg, corTexto;
                     // Cores baseadas no status
-                    if (ev.status === 'Cancelada') { corBg = '#fee2e2'; corTexto = '#991b1b'; }
-                    else if (ev.status === 'Concluída') { corBg = '#dcfce7'; corTexto = '#166534'; }
-                    else if (ev.status === 'Em Andamento') { corBg = '#fef9c3'; corTexto = '#854d0e'; }
-                    else { corBg = '#dbeafe'; corTexto = '#1e40af'; }
+                    if (ev.status === 'Cancelada') {
+                        corBg = '#fee2e2';
+                        corTexto = '#991b1b';
+                    } else if (ev.status === 'Concluída') {
+                        corBg = '#dcfce7';
+                        corTexto = '#166534';
+                    } else if (ev.status === 'Em Andamento') {
+                        corBg = '#fef9c3';
+                        corTexto = '#854d0e';
+                    } else {
+                        corBg = '#dbeafe';
+                        corTexto = '#1e40af';
+                    }
 
                     htmlEventos += `<div class="cal-evento" style="background: ${corBg}; color: ${corTexto};" title="${ev.hora} - ${ev.paciente}">
                         ${ev.hora} - ${ev.paciente.split(' ')[0]}
@@ -712,8 +858,14 @@ $lista_medicamentos = [
 
         function mudarMes(direcao) {
             mesAtual += direcao;
-            if (mesAtual > 11) { mesAtual = 0; anoAtual++; }
-            if (mesAtual < 0) { mesAtual = 11; anoAtual--; }
+            if (mesAtual > 11) {
+                mesAtual = 0;
+                anoAtual++;
+            }
+            if (mesAtual < 0) {
+                mesAtual = 11;
+                anoAtual--;
+            }
             renderizarCalendario(mesAtual, anoAtual);
         }
 
@@ -750,10 +902,14 @@ $lista_medicamentos = [
         function adicionarMedicamento(nome, dosagem, instrucoes) {
             const existe = receituarioItens.find(item => item.nome === nome);
             if (existe) {
-                if(typeof showToast === "function") showToast('Medicamento já adicionado!', 'warning');
+                if (typeof showToast === "function") showToast('Medicamento já adicionado!', 'warning');
                 return;
             }
-            receituarioItens.push({ nome, dosagem, instrucoes });
+            receituarioItens.push({
+                nome,
+                dosagem,
+                instrucoes
+            });
             atualizarPainelReceituario();
         }
 
@@ -782,6 +938,17 @@ $lista_medicamentos = [
                     </div>`;
             });
         }
+
+        document.getElementById('formPrescricao').onsubmit = function() {
+            const idCons = document.getElementById('select_consulta').value;
+            if (!idCons) {
+                alert('Selecione uma consulta antes!');
+                return false;
+            }
+            document.getElementById('input_id_consulta').value = idCons;
+            document.getElementById('input_lista_meds').value = JSON.stringify(receituarioItens);
+        };
     </script>
 </body>
+
 </html>

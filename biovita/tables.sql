@@ -39,17 +39,6 @@ create table login (
 ); 
 
 /*----------------------------------------------------------------------------------------------------*/
-/*
-create table consultas (
-	id_consul int auto_increment,
-    id_usu int not null,
-    dt_consul date not null,
-    hora_consul time not null,
-    status_consul enum ('Agendada', 'Em Andamento', 'Concluída', 'Remarcada'),
-    primary key (id_consul)
-);
-
-*/
 /*----------------------------------------------------------------------------------------------------*/
 drop table consultas;
 CREATE TABLE consultas (
@@ -65,6 +54,15 @@ CREATE TABLE consultas (
     FOREIGN KEY (id_log_medico) REFERENCES login(id_log)
 );
 
+/*----------------------------------------------------------------------------------------------------*/
+CREATE TABLE prescricoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_consulta INT NOT NULL,
+    medicamento VARCHAR(255),
+    dosagem VARCHAR(100),
+    instrucoes TEXT,
+    data_prescricao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 /*----------------------------------------------------------------------------------------------------*/
 DELIMITER $$
 CREATE TRIGGER valida_cargo_medico
