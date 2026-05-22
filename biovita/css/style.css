@@ -4,7 +4,6 @@
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     transition: all 0.3s ease;
-    /* Suaviza a retração da barra e efeitos de foco */
 }
 
 :root {
@@ -20,7 +19,6 @@ body {
     min-height: 100vh;
 }
 
-/* SIDEBAR ESTRUTURA */
 .sidebar {
     width: 260px;
     height: 100vh;
@@ -37,7 +35,6 @@ body {
     width: 80px;
 }
 
-/* LOGO NA SIDEBAR */
 .sidebar-logo {
     text-align: center;
     padding: 20px 10px;
@@ -47,7 +44,6 @@ body {
 .main-logo {
     width: 150px;
     filter: brightness(0) invert(1);
-    /* Deixa a logo branca */
 }
 
 .sidebar.collapsed .main-logo {
@@ -63,10 +59,8 @@ body {
 .sidebar.collapsed .logo-text,
 .sidebar.collapsed nav span {
     display: none;
-    /* Esconde texto */
 }
 
-/* MENU DE NAVEGAÇÃO */
 .toggle-container {
     padding: 15px;
     display: flex;
@@ -101,7 +95,6 @@ body {
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* CONTEÚDO PRINCIPAL */
 .main-content {
     margin-left: 260px;
     padding: 40px;
@@ -112,7 +105,6 @@ body {
     margin-left: 80px;
 }
 
-/* CARDS E FORMULÁRIOS */
 .card {
     background: var(--branco);
     padding: 30px;
@@ -138,7 +130,6 @@ body {
     margin-bottom: 8px;
 }
 
-/* DESIGN DOS CAMPOS DE ENTRADA */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -172,9 +163,9 @@ select:focus {
 .sidebar .nav-links li a {
     display: flex;
     align-items: center;
-    text-decoration: none; /* Remove o sublinhado */
-    color: white; /* Cor do texto */
-    padding: 12px 20px; /* Espaçamento interno */
+    text-decoration: none; 
+    color: white; 
+    padding: 12px 20px; 
     transition: all 0.4s ease;
 }
 

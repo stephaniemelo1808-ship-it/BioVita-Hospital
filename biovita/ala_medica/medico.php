@@ -1,19 +1,15 @@
 <?php
 session_start();
 
-// 1. TRAVA DE SEGURANÇA
 if (!isset($_SESSION['tipo_usu']) || $_SESSION['tipo_usu'] !== 'Médico') {
     header("Location: ../login.php?erro=acesso_negado");
     exit();
 }
 
-// 2. CONEXÃO COM O BANCO E VARIÁVEIS
 require_once '../conexao.php';
 $id_login_medico = $_SESSION['id'];
 
-// =======================================================
-// A) PROCESSAR ATUALIZAÇÃO DA CONSULTA
-// =======================================================
+
 if (isset($_POST['status_consulta']) && isset($_POST['id_consulta'])) {
     $id_cons = (int)$_POST['id_consulta'];
     $status = $mysqli->real_escape_string($_POST['status_consulta']);
@@ -38,9 +34,7 @@ if (isset($_POST['status_consulta']) && isset($_POST['id_consulta'])) {
 
 $aba_ativa = $_GET['aba'] ?? 'tab-painel';
 
-// =======================================================
-// B) BUSCAR DADOS DO PERFIL DO MÉDICO
-// =======================================================
+
 $sql_medico = "SELECT l.nome_usu, l.usuario, m.crm, m.uf, m.telefone, m.ubs 
                FROM login l 
                LEFT JOIN registro_medico m ON l.id_log = m.id_log 
@@ -54,9 +48,7 @@ $tel_medico  = $dados_medico['telefone'] ?? '(00) 00000-0000';
 $email_medico = $dados_medico['usuario'] ?? 'Não informado';
 $ubs_medico = $dados_medico['ubs'] ?? 'Não vinculada';
 
-// =======================================================
-// C) BUSCAR TODOS OS PACIENTES E FUNÇÃO IDADE
-// =======================================================
+
 $sql_pacientes = "SELECT * FROM registro_usuario ORDER BY nome ASC";
 $resultado_pacientes = $mysqli->query($sql_pacientes);
 
@@ -78,16 +70,14 @@ function calculaIdade(?string $dataNasc)
     return $agora->diff($data)->y;
 }
 
-// =======================================================
-// D) BUSCAR CONSULTAS DO MÉDICO
-// =======================================================
+
 $hoje = date('Y-m-d');
 $sql_consultas = "SELECT * FROM consultas WHERE id_log_medico = '$id_login_medico' ORDER BY data_hora_consul ASC";
 $resultado_consultas = $mysqli->query($sql_consultas);
 
 $todas_consultas = [];
 $consultas_hoje = [];
-$eventos_calendario = []; // Array novo para alimentar o Calendário JS
+$eventos_calendario = []; 
 $total_hoje = 0;
 $realizadas_hoje = 0;
 $proximas_hoje = 0;
@@ -104,7 +94,6 @@ if ($resultado_consultas) {
         $hora = date('H:i', strtotime($row['data_hora_consul']));
         $pac_nome = $lista_pacientes[$row['id_paciente']]['nome'] ?? 'Desconhecido';
 
-        // Alimenta o array do calendário
         $eventos_calendario[] = [
             'data' => $data_iso,
             'hora' => $hora,
@@ -130,11 +119,21 @@ if ($resultado_consultas) {
         }
     }
 }
-$eventos_js = json_encode($eventos_calendario); // Converte para o JS ler
+$eventos_js = json_encode($eventos_calendario); 
 
-// =======================================================
-// E) DADOS PARA O GRÁFICO
-// =======================================================
+
+$tempo_medio_minutos = 30; 
+$total_minutos = $realizadas_hoje * $tempo_medio_minutos;
+
+$horas_t = floor($total_minutos / 60);
+$minutos_t = $total_minutos % 60;
+
+if ($total_minutos == 0) {
+    $texto_horas = "0h 00min";
+} else {
+    $texto_horas = "{$horas_t}h " . str_pad($minutos_t, 2, '0', STR_PAD_LEFT) . "min";
+}
+
 $dados_semana = [0, 0, 0, 0, 0, 0, 0];
 $sql_grafico = "SELECT WEEKDAY(data_hora_consul) as dia_semana, COUNT(*) as total 
                 FROM consultas 
@@ -151,9 +150,6 @@ if ($resultado_grafico) {
 }
 $dados_grafico_js = implode(', ', $dados_semana);
 
-// =======================================================
-// F) LISTA DE MEDICAMENTOS
-// =======================================================
 $lista_medicamentos = [
     ['nome' => 'Paracetamol', 'tipo' => 'Analgesico', 'dosagem' => '750mg', 'instrucoes' => '1 comprimido a cada 8h'],
     ['nome' => 'Ibuprofeno', 'tipo' => 'Anti-inflamatorio', 'dosagem' => '600mg', 'instrucoes' => '1 comprimido a cada 12h'],
@@ -174,7 +170,6 @@ $lista_medicamentos = [
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* CHIPS DE FILTRO */
         .chip-group {
             display: flex;
             flex-wrap: wrap;
@@ -206,7 +201,6 @@ $lista_medicamentos = [
             box-shadow: 0 2px 8px rgba(44, 130, 181, 0.3);
         }
 
-        /* CALENDÁRIO FIXES (Caso falte no CSS principal) */
         .calendario-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -333,8 +327,8 @@ $lista_medicamentos = [
                 </div>
                 <div class="stat-card purple">
                     <div class="stat-info">
-                        <h3>Horas Trabalhadas</h3>
-                        <p>4h 30min</p>
+                        <h3>Horas Trabalhadas (Hoje)</h3>
+                        <p><?= $texto_horas ?></p>
                     </div>
                     <i class='bx bx-timer stat-icon'></i>
                 </div>
@@ -554,7 +548,6 @@ $lista_medicamentos = [
                         <select id="select_consulta" class="form-control" style="width:100%; padding: 10px; margin-bottom: 15px;">
                             <option value="">Escolha a consulta do paciente...</option>
                             <?php
-                            // Puxa as consultas deste médico
                             $cons_med = $mysqli->query("SELECT c.id_consulta, p.nome, c.data_hora_consul 
                                                 FROM consultas c 
                                                 JOIN registro_usuario p ON c.id_paciente = p.id 
@@ -633,9 +626,7 @@ $lista_medicamentos = [
 
     <script src="medico.js"></script>
     <script>
-        // ----------------------------------------------------
-        // LÓGICA 1: GRÁFICOS (Chart.js)
-        // ----------------------------------------------------
+
         document.addEventListener('DOMContentLoaded', function() {
             const canvasSemana = document.getElementById('graficoSemana');
             if (canvasSemana) {
@@ -713,9 +704,7 @@ $lista_medicamentos = [
             }
         });
 
-        // ----------------------------------------------------
-        // LÓGICA 2: CHIPS VISUAIS DE FILTRAGEM
-        // ----------------------------------------------------
+       
         let filtroAtualStatus = 'todas';
         let filtroAtualPeriodo = 'todas';
 
@@ -777,10 +766,8 @@ $lista_medicamentos = [
             if (msg) msg.style.display = (qtdVisiveis === 0) ? 'block' : 'none';
         }
 
-        // ----------------------------------------------------
-        // LÓGICA 3: CALENDÁRIO DINÂMICO
-        // ----------------------------------------------------
-        const eventosCal = <?= $eventos_js ?>; // Recebe as consultas do PHP
+
+        const eventosCal = <?= $eventos_js ?>; 
         let dataBaseCal = new Date(dataHojeServidor + 'T00:00:00');
         let mesAtual = dataBaseCal.getMonth();
         let anoAtual = dataBaseCal.getFullYear();
@@ -801,26 +788,22 @@ $lista_medicamentos = [
             const diasNoMes = new Date(ano, mes + 1, 0).getDate();
             const diasMesAnterior = new Date(ano, mes, 0).getDate();
 
-            // Preenche os espaços em branco com os dias finais do mês passado
             for (let i = primeiroDia - 1; i >= 0; i--) {
                 grid.innerHTML += `<div class="calendario-dia outro-mes"><div class="calendario-dia-numero">${diasMesAnterior - i}</div></div>`;
             }
 
-            // Renderiza os dias oficiais do mês atual
             for (let dia = 1; dia <= diasNoMes; dia++) {
                 let diaFormatado = String(dia).padStart(2, '0');
                 let mesFormatado = String(mes + 1).padStart(2, '0');
                 let dataIso = `${ano}-${mesFormatado}-${diaFormatado}`;
                 let classeHoje = (dataIso === dataHojeServidor) ? 'hoje' : '';
 
-                // Filtra as consultas do PHP que caem exatamente neste dia
                 let eventosDoDia = eventosCal.filter(e => e.data === dataIso);
-                eventosDoDia.sort((a, b) => a.hora.localeCompare(b.hora)); // Ordena por horário
+                eventosDoDia.sort((a, b) => a.hora.localeCompare(b.hora)); 
 
                 let htmlEventos = '';
                 eventosDoDia.forEach(ev => {
                     let corBg, corTexto;
-                    // Cores baseadas no status
                     if (ev.status === 'Cancelada') {
                         corBg = '#fee2e2';
                         corTexto = '#991b1b';
@@ -848,7 +831,6 @@ $lista_medicamentos = [
                 `;
             }
 
-            // Preenche os quadrados restantes com o início do próximo mês
             const totalCells = primeiroDia + diasNoMes;
             const remainingCells = (totalCells > 35) ? 42 - totalCells : 35 - totalCells;
             for (let dia = 1; dia <= remainingCells; dia++) {
@@ -869,17 +851,13 @@ $lista_medicamentos = [
             renderizarCalendario(mesAtual, anoAtual);
         }
 
-        // ----------------------------------------------------
-        // INICIALIZAÇÃO GERAL AO CARREGAR A PÁGINA
-        // ----------------------------------------------------
+ 
         document.addEventListener('DOMContentLoaded', function() {
             aplicarFiltros();
             renderizarCalendario(mesAtual, anoAtual);
         });
 
-        // ----------------------------------------------------
-        // LÓGICA 4: SELECIONAR PACIENTE PARA PRONTUÁRIO
-        // ----------------------------------------------------
+
         function selecionarAtendimento(elemento) {
             document.querySelectorAll('.item-consulta').forEach(item => item.classList.remove('active'));
             elemento.classList.add('active');
@@ -894,15 +872,13 @@ $lista_medicamentos = [
             document.getElementById('form_retorno').value = elemento.getAttribute('data-retorno');
         }
 
-        // ----------------------------------------------------
-        // LÓGICA 5: RECEITUÁRIO (PRESCRITOS)
-        // ----------------------------------------------------
+     
         let receituarioItens = [];
 
         function adicionarMedicamento(nome, dosagem, instrucoes) {
             const existe = receituarioItens.find(item => item.nome === nome);
             if (existe) {
-                if (typeof showToast === "function") showToast('Medicamento já adicionado!', 'warning');
+                alert('Este medicamento já está na lista!');
                 return;
             }
             receituarioItens.push({
@@ -921,7 +897,7 @@ $lista_medicamentos = [
         function atualizarPainelReceituario() {
             const container = document.getElementById('receituarioLista');
             if (receituarioItens.length === 0) {
-                container.innerHTML = `<div class="receituario-item"><div><div class="med-nome">Selecione um medicamento</div></div></div>`;
+                container.innerHTML = `<div style="color: #7f8c8d; padding: 15px 0;">Nenhum medicamento selecionado...</div>`;
                 return;
             }
             container.innerHTML = '';
@@ -932,22 +908,30 @@ $lista_medicamentos = [
                             <div class="med-nome" style="font-weight: 600; color: #2C3E50;">${med.nome}</div>
                             <div class="med-dose" style="font-size: 0.85rem; color: #7f8c8d;">${med.dosagem} - ${med.instrucoes}</div>
                         </div>
-                        <button type="button" onclick="removerMedicamento(${index})" style="background: transparent; border: none; color: #e74c3c; cursor: pointer; font-size: 1.2rem;">
+                        <button type="button" onclick="removerMedicamento(${index})" style="background: transparent; border: none; color: #e74c3c; cursor: pointer; font-size: 1.2rem;" title="Retirar">
                             <i class='bx bx-trash'></i>
                         </button>
                     </div>`;
             });
         }
 
-        document.getElementById('formPrescricao').onsubmit = function() {
-            const idCons = document.getElementById('select_consulta').value;
-            if (!idCons) {
-                alert('Selecione uma consulta antes!');
-                return false;
-            }
-            document.getElementById('input_id_consulta').value = idCons;
-            document.getElementById('input_lista_meds').value = JSON.stringify(receituarioItens);
-        };
+        const formPrescricao = document.getElementById('formPrescricao');
+        if (formPrescricao) {
+            formPrescricao.onsubmit = function() {
+                const idCons = document.getElementById('select_consulta').value;
+                if (!idCons) {
+                    alert('Por favor, selecione uma consulta (paciente) antes de salvar!');
+                    return false;
+                }
+                if (receituarioItens.length === 0) {
+                    alert('Atenção: Adicione pelo menos um medicamento para salvar a prescrição!');
+                    return false;
+                }
+                document.getElementById('input_id_consulta').value = idCons;
+                document.getElementById('input_lista_meds').value = JSON.stringify(receituarioItens);
+                return true;
+            };
+        }
     </script>
 </body>
 

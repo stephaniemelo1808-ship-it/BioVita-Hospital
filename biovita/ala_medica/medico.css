@@ -27,7 +27,6 @@
             min-height: 100vh;
         }
 
-        /* ============ SIDEBAR ============ */
         .sidebar {
             width: 260px;
             height: 100vh;
@@ -128,7 +127,6 @@
             background: rgba(255, 100, 100, 0.2);
         }
 
-        /* ============ MAIN CONTENT ============ */
         .main-content {
             margin-left: 260px;
             padding: 30px 40px;
@@ -140,7 +138,6 @@
             margin-left: 80px;
         }
 
-        /* ============ HEADER ============ */
         .page-header {
             margin-bottom: 25px;
             display: flex;
@@ -174,7 +171,6 @@
             gap: 8px;
         }
 
-        /* ============ TABS ============ */
         .tabs-nav {
             display: flex;
             gap: 8px;
@@ -214,7 +210,6 @@
             font-size: 1.2rem;
         }
 
-        /* ============ TAB CONTENT ============ */
         .tab-content {
             display: none;
             animation: fadeIn 0.3s ease;
@@ -229,7 +224,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ============ CARDS ============ */
         .card {
             background: var(--branco);
             padding: 25px;
@@ -252,7 +246,6 @@
             color: var(--azul-primario);
         }
 
-        /* ============ STATS GRID ============ */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -302,7 +295,6 @@
             opacity: 0.2;
         }
 
-        /* ============ LAYOUT FLEX ============ */
         .layout-flex {
             display: flex;
             gap: 20px;
@@ -313,7 +305,6 @@
         .flex-1 { flex: 1; min-width: 280px; }
         .flex-half { flex: 1; min-width: 350px; }
 
-        /* ============ CONSULTA LISTA ============ */
         .consulta-item {
             display: flex;
             align-items: center;
@@ -353,7 +344,6 @@
         .status-concluida { background: #e8f8f0; color: var(--sucesso); }
         .status-cancelada { background: #fdedec; color: var(--perigo); }
 
-        /* ============ BUTTONS ============ */
         .btn-primary {
             background: var(--azul-primario);
             color: white;
@@ -466,7 +456,6 @@
             border-color: var(--sucesso);
         }
 
-        /* ============ FORM ELEMENTS ============ */
         input[type="text"],
         input[type="date"],
         select,
@@ -518,7 +507,6 @@
             gap: 15px;
         }
 
-        /* ============ PACIENTE ITEM (LISTA) ============ */
         .paciente-item {
             padding: 15px;
             border-bottom: 1px solid #eee;
@@ -550,7 +538,6 @@
             color: var(--texto-secundario);
         }
 
-        /* ============ TABELA ============ */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -580,7 +567,6 @@
             background: var(--azul-bg);
         }
 
-        /* ============ CALENDARIO ============ */
         .calendario-header {
             display: flex;
             justify-content: space-between;
@@ -682,7 +668,6 @@
             margin: 4px auto 0;
         }
 
-        /* ============ PACIENTE CARD GRID ============ */
         .pacientes-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -728,7 +713,6 @@
             margin: 0 0 15px 0;
         }
 
-        /* ============ PERFIL ============ */
         .perfil-card {
             text-align: center;
             padding: 30px;
@@ -801,7 +785,6 @@
             font-size: 0.95rem;
         }
 
-        /* ============ TOGGLE SWITCH ============ */
         .toggle-row {
             display: flex;
             align-items: center;
@@ -864,7 +847,6 @@
             transform: translateX(24px);
         }
 
-        /* ============ RECEITUARIO ============ */
         .receituario-item {
             display: flex;
             align-items: center;
@@ -895,7 +877,6 @@
             padding: 4px;
         }
 
-        /* ============ RESPONSIVE ============ */
         @media (max-width: 768px) {
             .sidebar {
                 width: 80px;
@@ -929,7 +910,6 @@
             }
         }
 
-        /* Toast notification */
         .toast {
             position: fixed;
             top: 20px;
@@ -968,7 +948,6 @@
             justify-content: center;
         }
 
-        /* ============ ABA DE RELATÓRIOS (HISTÓRICO) ============ */
         .relatorios-list {
             display: flex;
             flex-direction: column;

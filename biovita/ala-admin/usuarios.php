@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// TRAVA DE SEGURANÇA
 if (!isset($_SESSION['tipo_usu']) || ($_SESSION['tipo_usu'] !== 'Administrador' && $_SESSION['tipo_usu'] !== 'Admin')) {
     header("Location: ../login.php?erro=acesso_negado");
     exit();
@@ -10,9 +9,7 @@ if (!isset($_SESSION['tipo_usu']) || ($_SESSION['tipo_usu'] !== 'Administrador' 
 require_once('../conexao.php');
 $aba_ativa = isset($_GET['aba']) ? $_GET['aba'] : 'tab-usuarios';
 
-// ==========================================
-// A) EXCLUSÃO (DELETE)
-// ==========================================
+
 if (isset($_GET['excluir_usu'])) {
     $id_excluir = (int)$_GET['excluir_usu'];
     if ($id_excluir != $_SESSION['id']) {
@@ -35,11 +32,6 @@ if (isset($_GET['excluir_cons'])) {
     header("Location: usuarios.php?aba=tab-consultas"); exit();
 }
 
-// ==========================================
-// B) CADASTRO (CREATE)
-// ==========================================
-
-// 1. Cadastrar Staff (Admin/Médico/Recepção)
 if(isset($_POST['btn-add-user'])) {
     $novo_user = $mysqli->real_escape_string($_POST['reg_usuario']);
     $nova_senha = $mysqli->real_escape_string($_POST['reg_senha']);
@@ -67,7 +59,6 @@ if(isset($_POST['btn-add-user'])) {
     header("Location: usuarios.php?aba=tab-usuarios"); exit();
 }
 
-// 2. Agendar Consulta
 if(isset($_POST['btn-add-cons'])) {
     $id_pac = (int)$_POST['cons_paciente'];
     $id_med = (int)$_POST['cons_medico'];
@@ -85,11 +76,7 @@ if(isset($_POST['btn-add-cons'])) {
     header("Location: usuarios.php?aba=tab-consultas"); exit();
 }
 
-// ==========================================
-// C) EDIÇÃO (UPDATE)
-// ==========================================
 
-// 1. Editar Staff
 if(isset($_POST['btn-edit-user'])) {
     $id = (int)$_POST['edit_id'];
     $nome = $mysqli->real_escape_string($_POST['edit_nome']);
@@ -99,7 +86,6 @@ if(isset($_POST['btn-edit-user'])) {
     header("Location: usuarios.php?aba=tab-usuarios"); exit();
 }
 
-// 2. Editar Consulta
 if(isset($_POST['btn-edit-cons'])) {
     $id = (int)$_POST['edit_cons_id'];
     $data_hora = $mysqli->real_escape_string($_POST['edit_cons_data']);
@@ -112,9 +98,7 @@ if(isset($_POST['btn-edit-cons'])) {
     header("Location: usuarios.php?aba=tab-consultas"); exit();
 }
 
-// ==========================================
-// D) LEITURA (READ)
-// ==========================================
+
 $res_usuarios = $mysqli->query("SELECT l.*, m.crm FROM login l LEFT JOIN registro_medico m ON l.id_log = m.id_log ORDER BY l.id_log DESC");
 
 $res_consultas = $mysqli->query("SELECT c.*, p.nome as paciente, l.nome_usu as medico 
@@ -123,7 +107,6 @@ $res_consultas = $mysqli->query("SELECT c.*, p.nome as paciente, l.nome_usu as m
                                  JOIN login l ON c.id_log_medico = l.id_log 
                                  ORDER BY c.data_hora_consul DESC");
 
-// Listas para popular os selects de agendamento de consultas
 $lista_pac = $mysqli->query("SELECT id, nome FROM registro_usuario ORDER BY nome ASC");
 $lista_med = $mysqli->query("SELECT id_log, nome_usu FROM login WHERE tipo_usu = 'Médico' ORDER BY nome_usu ASC");
 ?>

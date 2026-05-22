@@ -4,7 +4,6 @@
         $root = basename($basePath) === 'includes' ? '../' : '';
     ?>
 
-    <!-- SIDEBAR -->
     <aside class="sidebar" id="mySidebar">
         <div class="toggle-container">
             <button class="toggle-btn" onclick="toggleSidebar()">

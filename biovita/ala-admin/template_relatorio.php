@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Relatório Hospitalar - Bio Vita</title>
     <style>
-        /* CSS impressão e PDF */
         body {
             font-family: Arial, sans-serif;
             color: #333;
@@ -38,7 +37,6 @@
             color: #666;
         }
 
-        /* Tabela de dados (Onde os dados do banco entram) */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -60,7 +58,6 @@
             font-size: 12px;
         }
 
-        /* Linhas zebradas para facilitar leitura (UX de papel) */
         table tr:nth-child(even) {
             background-color: #fafafa;
         }

@@ -1,8 +1,6 @@
 <?php
-// Ficheiro: ala_medica/salvar_prescricao.php
 require_once '../conexao.php';
 
-// Verifica se os dados foram enviados
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['id_consulta']) && !empty($_POST['lista_meds'])) {
     
     $id_consulta = (int)$_POST['id_consulta'];
@@ -20,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['id_consulta']) && !e
         }
     }
     
-    // Alerta de sucesso e redirecionamento
     header("Location: medico.php?aba=tab-prescricoes&sucesso=1");
     exit();
 } else {

@@ -274,9 +274,7 @@ $dados_grafico_js = implode(', ', $dados_semana);
         }
     });
 
-    // Função para exportar os DADOS DETALHADOS para Excel
     function exportarParaExcel() {
-        // 1. Busca os dados diretamente do banco via PHP e coloca num array JS
         const dadosDetalhes = [
             <?php
             $sql_detalhe = "SELECT c.data_hora_consul, p.nome as paciente, l.nome_usu as medico, c.tipo_consulta 
@@ -286,14 +284,12 @@ $dados_grafico_js = implode(', ', $dados_semana);
                             ORDER BY c.data_hora_consul DESC LIMIT 100";
             $res = $mysqli->query($sql_detalhe);
             while($row = $res->fetch_assoc()) {
-                // Removemos quebras de linha/aspas que possam quebrar o JS
                 $data = date('d/m/Y H:i', strtotime($row['data_hora_consul']));
                 echo "{data:'$data', pac:'".addslashes($row['paciente'])."', med:'".addslashes($row['medico'])."', tipo:'".$row['tipo_consulta']."'},";
             }
             ?>
         ];
 
-        // 2. Cria a tabela HTML com os dados detalhados
         let htmlTable = `
             <meta charset="utf-8">
             <table border="1">
@@ -318,7 +314,6 @@ $dados_grafico_js = implode(', ', $dados_semana);
 
         htmlTable += "</table>";
 
-        // 3. Força o download como arquivo .xls
         const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel' });
         const url = URL.createObjectURL(blob);
         

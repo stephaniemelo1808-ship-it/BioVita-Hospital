@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// TRAVA DE SEGURANÇA
 if (!isset($_SESSION['tipo_usu']) || ($_SESSION['tipo_usu'] !== 'Administrador' && $_SESSION['tipo_usu'] !== 'Admin')) {
     header("Location: ../login.php?erro=acesso_negado");
     exit();
@@ -9,9 +8,7 @@ if (!isset($_SESSION['tipo_usu']) || ($_SESSION['tipo_usu'] !== 'Administrador' 
 
 require_once('../conexao.php');
 
-// ==========================================
-// A) EXCLUSÃO (DELETE)
-// ==========================================
+
 if (isset($_GET['excluir_pac'])) {
     $id_excluir = (int)$_GET['excluir_pac'];
     if ($mysqli->query("DELETE FROM registro_usuario WHERE id = '$id_excluir'")) {
@@ -25,9 +22,7 @@ if (isset($_GET['excluir_pac'])) {
     exit();
 }
 
-// ==========================================
-// B) CADASTRO (CREATE)
-// ==========================================
+
 if(isset($_POST['btn-add-pac'])) {
     $nome = $mysqli->real_escape_string($_POST['pac_nome']);
     $cpf = preg_replace('/[^0-9]/', '', $_POST['pac_cpf']);
@@ -51,9 +46,7 @@ if(isset($_POST['btn-add-pac'])) {
     exit();
 }
 
-// ==========================================
-// C) EDIÇÃO (UPDATE)
-// ==========================================
+
 if(isset($_POST['btn-edit-pac'])) {
     $id = (int)$_POST['edit_pac_id'];
     $nome = $mysqli->real_escape_string($_POST['edit_pac_nome']);
@@ -69,9 +62,7 @@ if(isset($_POST['btn-edit-pac'])) {
     exit();
 }
 
-// ==========================================
-// D) LEITURA (READ)
-// ==========================================
+
 $res_pacientes = $mysqli->query("SELECT * FROM registro_usuario ORDER BY id DESC");
 ?>
 
@@ -235,7 +226,6 @@ $res_pacientes = $mysqli->query("SELECT * FROM registro_usuario ORDER BY id DESC
             document.getElementById('modalEditPac').style.display = 'flex';
         }
 
-        // Fechar modal ao clicar na área escura (fora da caixa branca)
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) { 
                 event.target.style.display = "none"; 

@@ -1,6 +1,4 @@
-// ==========================================
-// NAVEGAÇÃO E LAYOUT (TABS E SIDEBAR)
-// ==========================================
+
 function toggleSidebar() {
     const sidebar = document.getElementById("mySidebar");
     const mainContent = document.getElementById("mainContent");
@@ -17,7 +15,6 @@ function openTab(evt, tabId) {
 
     document.getElementById(tabId).classList.add('active');
     
-    // Adiciona o active no botão se ele foi clicado diretamente
     if (evt) {
         evt.currentTarget.classList.add('active');
     }
@@ -26,7 +23,6 @@ function openTab(evt, tabId) {
 function openTabById(tabId) {
     openTab(null, tabId);
     
-    // Procura o botão correspondente para ativá-lo também
     const tabButtons = document.querySelectorAll('.tab-btn');
     tabButtons.forEach(btn => {
         if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
@@ -35,9 +31,6 @@ function openTabById(tabId) {
     });
 }
 
-// ==========================================
-// UTILITÁRIOS (AVISOS)
-// ==========================================
 function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');
     if (!toast) return;
@@ -52,9 +45,7 @@ function exportarDashboard() {
     showToast('Dados exportados com sucesso!', 'success');
 }
 
-// ==========================================
-// RECEITUÁRIO, IMPRESSÃO E PDF
-// ==========================================
+
 function abrirOverlayReceituario() {
     const overlay = document.getElementById('receituarioOverlay');
     if (overlay) overlay.classList.add('active');
@@ -76,7 +67,6 @@ function renderReceituarioPreview() {
 
     let itemsHTML = '';
     
-    // Filtra o placeholder "Selecione um medicamento" para não aparecer no PDF
     lista.forEach(item => {
         const nome = item.querySelector('.med-nome')?.textContent || '';
         const dose = item.querySelector('.med-dose')?.textContent || '';
@@ -108,7 +98,6 @@ function baixarReceituarioPDF() {
         return;
     }
     
-    // Garante que o preview está preenchido antes de gerar o PDF
     renderReceituarioPreview();
     
     const elemento = document.querySelector('.preview-box');
@@ -129,7 +118,6 @@ function baixarReceituarioPDF() {
     });
 }
 
-// Remove o modo de impressão assim que a janela de imprimir fechar
 window.onafterprint = function () {
     const overlay = document.getElementById('receituarioOverlay');
     if (overlay) overlay.classList.remove('print-mode');

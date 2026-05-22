@@ -1,20 +1,17 @@
 <?php
 session_start();
 
-// TRAVA DE SEGURANÇA
 if (!isset($_SESSION['tipo_usu'])) {
     die("Acesso negado. Por favor, faça login.");
 }
 
 require_once '../conexao.php';
 
-// Recebe os filtros do formulário
 $data_inicio = $mysqli->real_escape_string($_GET['data_inicio'] ?? date('Y-m-01'));
 $data_fim = $mysqli->real_escape_string($_GET['data_fim'] ?? date('Y-m-t'));
 $tipo = $mysqli->real_escape_string($_GET['tipo_relatorio'] ?? 'atendimentos');
 $formato = $mysqli->real_escape_string($_GET['formato'] ?? 'pdf');
 
-// Variáveis para construir a tabela
 $titulo_relatorio = "";
 $colunas = "";
 $linhas = "";
@@ -22,9 +19,6 @@ $linhas = "";
 $data_inicio_sql = $data_inicio . ' 00:00:00';
 $data_fim_sql = $data_fim . ' 23:59:59';
 
-// ==========================================
-// 1. LÓGICA DAS QUERIES
-// ==========================================
 if ($tipo == 'atendimentos') {
     $titulo_relatorio = "Resumo de Atendimentos";
     $colunas = "<th>Data/Hora</th><th>Paciente</th><th>Médico</th><th>Especialidade</th><th>Status</th>";
@@ -86,9 +80,7 @@ if (empty($linhas)) {
     $linhas = "<tr><td colspan='5' style='text-align:center; padding: 30px; color: #7f8c8d;'>Nenhum registo encontrado com estes filtros.</td></tr>";
 }
 
-// ==========================================
-// 2. EXPORTAR PARA EXCEL (.XLS)
-// ==========================================
+
 if ($formato === 'excel') {
     header("Content-Type: application/vnd.ms-excel; charset=utf-8");
     header("Content-Disposition: attachment; filename=Relatorio_{$tipo}_" . date('Y-m-d') . ".xls");
@@ -105,9 +97,7 @@ if ($formato === 'excel') {
     exit();
 }
 
-// ==========================================
-// 3. EXPORTAR PARA PDF (Download Direto)
-// ==========================================
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -118,7 +108,6 @@ if ($formato === 'excel') {
     <style>
         body { font-family: Arial, sans-serif; color: #333; margin: 0; padding: 40px; background: #2C3E50; }
         
-        /* O conteúdo que vai virar PDF (escondido inicialmente para ficar limpo) */
         #conteudo-pdf { background: white; width: 1000px; margin: 0 auto; padding: 40px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         
         .header { text-align: center; border-bottom: 2px solid #2C82B5; padding-bottom: 20px; margin-bottom: 30px; }
@@ -174,11 +163,9 @@ if ($formato === 'excel') {
     </div>
 
     <script>
-        // Quando a página carregar, força a criação e o download do PDF
         document.addEventListener("DOMContentLoaded", function() {
             const elemento = document.getElementById('conteudo-pdf');
             
-            // Configurações do PDF (Qualidade máxima, formato A4 na horizontal para caber a tabela)
             const opt = {
                 margin:       10,
                 filename:     'Relatorio_BioVita_<?= date('Ymd_Hi') ?>.pdf',
@@ -187,9 +174,7 @@ if ($formato === 'excel') {
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
-            // Gera e descarrega o ficheiro
             html2pdf().set(opt).from(elemento).save().then(() => {
-                // Atualiza a mensagem da tela
                 document.getElementById('loading-screen').innerHTML = `
                     <h2 style="color: #2ecc71;">Download Concluído com Sucesso!</h2>
                     <p>Pode fechar este separador e voltar ao sistema.</p>
