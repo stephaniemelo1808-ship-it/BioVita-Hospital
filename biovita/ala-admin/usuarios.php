@@ -39,18 +39,39 @@ if(isset($_POST['btn-add-user'])) {
     
     $check = $mysqli->query("SELECT * FROM login WHERE usuario = '$novo_user'");
     if($check->num_rows == 0) {
-        $mysqli->query("INSERT INTO login (usuario, senha_usu, tipo_usu, nome_usu) VALUES ('$novo_user', '$nova_senha', '$novo_tipo', '$novo_nome')");
-        if ($novo_tipo === 'Médico') {
+        try {
+            // 1. Cria o login
+            $mysqli->query("INSERT INTO login (usuario, senha_usu, tipo_usu, nome_usu) VALUES ('$novo_user', '$nova_senha', '$novo_tipo', '$novo_nome')");
             $id_log = $mysqli->insert_id;
-            $crm = preg_replace('/[^0-9]/', '', $_POST['reg_crm']); // Guarda só os números do CRM
-            $uf = $mysqli->real_escape_string($_POST['reg_uf']);
-            $telefone = $mysqli->real_escape_string($_POST['reg_telefone']);
-            $ubs = $mysqli->real_escape_string($_POST['reg_ubs']);
-            $cpf = preg_replace('/[^0-9]/', '', $_POST['reg_cpf']); // Guarda só os números do CPF
-            $mysqli->query("INSERT INTO registro_medico (id_log, cpf, crm, uf, telefone, ubs) VALUES ('$id_log', '$cpf', '$crm', '$uf', '$telefone', '$ubs')");
+            
+            // 2. Se for médico, tenta inserir os dados médicos
+            if ($novo_tipo === 'Médico') {
+                $crm = preg_replace('/[^0-9]/', '', $_POST['reg_crm']);
+                $uf = $mysqli->real_escape_string($_POST['reg_uf']);
+                $telefone = $mysqli->real_escape_string($_POST['reg_telefone']);
+                $ubs = $mysqli->real_escape_string($_POST['reg_ubs']);
+                $cpf = preg_replace('/[^0-9]/', '', $_POST['reg_cpf']);
+                
+                $mysqli->query("INSERT INTO registro_medico (id_log, cpf, crm, uf, telefone, ubs) VALUES ('$id_log', '$cpf', '$crm', '$uf', '$telefone', '$ubs')");
+            }
+            
+            $_SESSION['alerta'] = "Colaborador cadastrado com sucesso."; 
+            $_SESSION['tipo_alerta'] = "sucesso";
+            
+        } catch (Exception $e) {
+            // SE DEU ERRO (CPF/CRM DUPLICADO OU TRIGGER): Desfaz o login criado!
+            if (isset($id_log)) {
+                $mysqli->query("DELETE FROM login WHERE id_log = '$id_log'");
+            }
+            
+            $erro = $e->getMessage();
+            if (strpos($erro, 'cpf') !== false) $erro = "Este CPF já se encontra registado.";
+            elseif (strpos($erro, 'crm') !== false) $erro = "Este CRM já se encontra registado.";
+            elseif (strpos($erro, '45000') !== false) $erro = "Bloqueado pelo banco de dados: Validação de cargo falhou.";
+            
+            $_SESSION['alerta'] = "Falha no cadastro médico: " . $erro; 
+            $_SESSION['tipo_alerta'] = "erro";
         }
-        $_SESSION['alerta'] = "Funcionário cadastrado com sucesso."; 
-        $_SESSION['tipo_alerta'] = "sucesso";
     } else {
         $_SESSION['alerta'] = "Erro: Este Login já existe."; 
         $_SESSION['tipo_alerta'] = "erro";
@@ -65,11 +86,12 @@ if(isset($_POST['btn-add-cons'])) {
     $tipo = $mysqli->real_escape_string($_POST['cons_tipo']);
     $status = $mysqli->real_escape_string($_POST['cons_status']);
 
-    if($mysqli->query("INSERT INTO consultas (id_paciente, id_log_medico, data_hora_consul, tipo_consulta, status_consulta) VALUES ('$id_pac', '$id_med', '$data_hora', '$tipo', '$status')")){
+    try {
+        $mysqli->query("INSERT INTO consultas (id_paciente, id_log_medico, data_hora_consul, tipo_consulta, status_consulta) VALUES ('$id_pac', '$id_med', '$data_hora', '$tipo', '$status')");
         $_SESSION['alerta'] = "Consulta agendada com sucesso!"; 
         $_SESSION['tipo_alerta'] = "sucesso";
-    } else {
-        $_SESSION['alerta'] = "Erro ao agendar consulta."; 
+    } catch (Exception $e) {
+        $_SESSION['alerta'] = "Erro ao agendar consulta: " . $e->getMessage(); 
         $_SESSION['tipo_alerta'] = "erro";
     }
     header("Location: usuarios.php?aba=tab-consultas"); exit();
@@ -82,27 +104,36 @@ if(isset($_POST['btn-edit-user'])) {
     $senha = $mysqli->real_escape_string($_POST['edit_senha']);
     $tipo = $mysqli->real_escape_string($_POST['edit_tipo']);
     
-    $mysqli->query("UPDATE login SET nome_usu = '$nome', usuario = '$usuario', senha_usu = '$senha', tipo_usu = '$tipo' WHERE id_log = '$id'");
-    
-    if ($tipo === 'Médico') {
-        $crm = preg_replace('/[^0-9]/', '', $_POST['edit_crm']);
-        $uf = $mysqli->real_escape_string($_POST['edit_uf']);
-        $telefone = $mysqli->real_escape_string($_POST['edit_telefone']);
-        $ubs = $mysqli->real_escape_string($_POST['edit_ubs']);
-        $cpf = preg_replace('/[^0-9]/', '', $_POST['edit_cpf']);
+    try {
+        $mysqli->query("UPDATE login SET nome_usu = '$nome', usuario = '$usuario', senha_usu = '$senha', tipo_usu = '$tipo' WHERE id_log = '$id'");
         
-        $check_med = $mysqli->query("SELECT id_log FROM registro_medico WHERE id_log = '$id'");
-        if ($check_med->num_rows > 0) {
-            $mysqli->query("UPDATE registro_medico SET crm = '$crm', uf = '$uf', telefone = '$telefone', cpf = '$cpf', ubs = '$ubs' WHERE id_log = '$id'");
+        if ($tipo === 'Médico') {
+            $crm = preg_replace('/[^0-9]/', '', $_POST['edit_crm']);
+            $uf = $mysqli->real_escape_string($_POST['edit_uf']);
+            $telefone = $mysqli->real_escape_string($_POST['edit_telefone']);
+            $ubs = $mysqli->real_escape_string($_POST['edit_ubs']);
+            $cpf = preg_replace('/[^0-9]/', '', $_POST['edit_cpf']);
+            
+            $check_med = $mysqli->query("SELECT id_log FROM registro_medico WHERE id_log = '$id'");
+            if ($check_med->num_rows > 0) {
+                $mysqli->query("UPDATE registro_medico SET crm = '$crm', uf = '$uf', telefone = '$telefone', cpf = '$cpf', ubs = '$ubs' WHERE id_log = '$id'");
+            } else {
+                $mysqli->query("INSERT INTO registro_medico (id_log, cpf, crm, uf, telefone, ubs) VALUES ('$id', '$cpf', '$crm', '$uf', '$telefone', '$ubs')");
+            }
         } else {
-            $mysqli->query("INSERT INTO registro_medico (id_log, cpf, crm, uf, telefone, ubs) VALUES ('$id', '$cpf', '$crm', '$uf', '$telefone', '$ubs')");
+            $mysqli->query("DELETE FROM registro_medico WHERE id_log = '$id'");
         }
-    } else {
-        $mysqli->query("DELETE FROM registro_medico WHERE id_log = '$id'");
-    }
 
-    $_SESSION['alerta'] = "Colaborador atualizado com sucesso."; 
-    $_SESSION['tipo_alerta'] = "sucesso";
+        $_SESSION['alerta'] = "Colaborador atualizado com sucesso."; 
+        $_SESSION['tipo_alerta'] = "sucesso";
+    } catch (Exception $e) {
+        $erro = $e->getMessage();
+        if (strpos($erro, 'cpf') !== false) $erro = "O CPF inserido já pertence a outro colaborador.";
+        elseif (strpos($erro, 'crm') !== false) $erro = "O CRM inserido já pertence a outro colaborador.";
+        
+        $_SESSION['alerta'] = "Erro ao atualizar colaborador: " . $erro; 
+        $_SESSION['tipo_alerta'] = "erro";
+    }
     header("Location: usuarios.php?aba=tab-usuarios"); exit();
 }
 
@@ -493,17 +524,16 @@ $lista_med = $mysqli->query("SELECT id_log, nome_usu FROM login WHERE tipo_usu =
             document.getElementById('mod_usu_senha').value = elemento.getAttribute('data-senha');
             document.getElementById('mod_usu_tipo').value = elemento.getAttribute('data-tipo');
             
-            // Adiciona a formatação de máscara na hora que os dados abrem (para os CPFs que já estão no BD sem traço)
             let cpfBase = elemento.getAttribute('data-cpf');
             let telBase = elemento.getAttribute('data-telefone');
             
             let modCpf = document.getElementById('mod_usu_cpf');
             modCpf.value = cpfBase;
-            mascaraCPF(modCpf); // Aciona a formatação
+            mascaraCPF(modCpf); 
             
             let modTel = document.getElementById('mod_usu_telefone');
             modTel.value = telBase;
-            // mascaraTelefone(modTel); // (Opcional) descomente se os seus telefones não tiverem máscara no BD
+            mascaraTelefone(modTel);
             
             document.getElementById('mod_usu_crm').value = elemento.getAttribute('data-crm');
             document.getElementById('mod_usu_uf').value = elemento.getAttribute('data-uf');
