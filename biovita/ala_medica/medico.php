@@ -9,7 +9,6 @@ if (!isset($_SESSION['tipo_usu']) || $_SESSION['tipo_usu'] !== 'Médico') {
 require_once '../conexao.php';
 $id_login_medico = $_SESSION['id'];
 
-
 if (isset($_POST['status_consulta']) && isset($_POST['id_consulta'])) {
     $id_cons = (int)$_POST['id_consulta'];
     $status = $mysqli->real_escape_string($_POST['status_consulta']);
@@ -34,7 +33,6 @@ if (isset($_POST['status_consulta']) && isset($_POST['id_consulta'])) {
 
 $aba_ativa = $_GET['aba'] ?? 'tab-painel';
 
-
 $sql_medico = "SELECT l.nome_usu, l.usuario, m.crm, m.uf, m.telefone, m.ubs 
                FROM login l 
                LEFT JOIN registro_medico m ON l.id_log = m.id_log 
@@ -47,7 +45,6 @@ $crm_medico  = $dados_medico['crm'] ?? 'CRM Pendente';
 $tel_medico  = $dados_medico['telefone'] ?? '(00) 00000-0000';
 $email_medico = $dados_medico['usuario'] ?? 'Não informado';
 $ubs_medico = $dados_medico['ubs'] ?? 'Não vinculada';
-
 
 $sql_pacientes = "SELECT * FROM registro_usuario ORDER BY nome ASC";
 $resultado_pacientes = $mysqli->query($sql_pacientes);
@@ -70,14 +67,13 @@ function calculaIdade(?string $dataNasc)
     return $agora->diff($data)->y;
 }
 
-
 $hoje = date('Y-m-d');
 $sql_consultas = "SELECT * FROM consultas WHERE id_log_medico = '$id_login_medico' ORDER BY data_hora_consul ASC";
 $resultado_consultas = $mysqli->query($sql_consultas);
 
 $todas_consultas = [];
 $consultas_hoje = [];
-$eventos_calendario = []; 
+$eventos_calendario = [];
 $total_hoje = 0;
 $realizadas_hoje = 0;
 $proximas_hoje = 0;
@@ -89,7 +85,6 @@ $qtd_cancelada = 0;
 if ($resultado_consultas) {
     while ($row = $resultado_consultas->fetch_assoc()) {
         $todas_consultas[] = $row;
-
         $data_iso = date('Y-m-d', strtotime($row['data_hora_consul']));
         $hora = date('H:i', strtotime($row['data_hora_consul']));
         $pac_nome = $lista_pacientes[$row['id_paciente']]['nome'] ?? 'Desconhecido';
@@ -103,7 +98,6 @@ if ($resultado_consultas) {
 
         if ($data_iso == $hoje) {
             $consultas_hoje[] = $row;
-
             $total_hoje++;
             if ($row['status_consulta'] == 'Concluída') {
                 $realizadas_hoje++;
@@ -119,12 +113,10 @@ if ($resultado_consultas) {
         }
     }
 }
-$eventos_js = json_encode($eventos_calendario); 
+$eventos_js = json_encode($eventos_calendario);
 
-
-$tempo_medio_minutos = 30; 
+$tempo_medio_minutos = 30;
 $total_minutos = $realizadas_hoje * $tempo_medio_minutos;
-
 $horas_t = floor($total_minutos / 60);
 $minutos_t = $total_minutos % 60;
 
@@ -151,10 +143,20 @@ if ($resultado_grafico) {
 $dados_grafico_js = implode(', ', $dados_semana);
 
 $lista_medicamentos = [
-    ['nome' => 'Paracetamol', 'tipo' => 'Analgesico', 'dosagem' => '750mg', 'instrucoes' => '1 comprimido a cada 8h'],
-    ['nome' => 'Ibuprofeno', 'tipo' => 'Anti-inflamatorio', 'dosagem' => '600mg', 'instrucoes' => '1 comprimido a cada 12h'],
+    ['nome' => 'Paracetamol', 'tipo' => 'Analgesico', 'dosagem' => '750mg', 'instrucoes' => '1 comprimido a cada 8h, se dor ou febre'],
+    ['nome' => 'Dipirona', 'tipo' => 'Analgesico', 'dosagem' => '500mg', 'instrucoes' => '1 comprimido a cada 6h, em caso de dor'],
+    ['nome' => 'Ibuprofeno', 'tipo' => 'Anti-inflamatorio', 'dosagem' => '600mg', 'instrucoes' => '1 comprimido a cada 12h, após as refeições'],
+    ['nome' => 'Nimesulida', 'tipo' => 'Anti-inflamatorio', 'dosagem' => '100mg', 'instrucoes' => '1 comprimido a cada 12h, por 5 dias'],
     ['nome' => 'Amoxicilina', 'tipo' => 'Antibiotico', 'dosagem' => '500mg', 'instrucoes' => '1 capsula a cada 8h por 7 dias'],
-    ['nome' => 'Losartana', 'tipo' => 'Anti-hipertensivo', 'dosagem' => '50mg', 'instrucoes' => '1 comprimido ao dia']
+    ['nome' => 'Azitromicina', 'tipo' => 'Antibiotico', 'dosagem' => '500mg', 'instrucoes' => '1 comprimido ao dia, por 5 dias'],
+    ['nome' => 'Omeprazol', 'tipo' => 'Protetor Gastrico', 'dosagem' => '20mg', 'instrucoes' => '1 cápsula em jejum, 30 min antes do pequeno-almoço'],
+    ['nome' => 'Pantoprazol', 'tipo' => 'Protetor Gastrico', 'dosagem' => '40mg', 'instrucoes' => '1 comprimido em jejum'],
+    ['nome' => 'Loratadina', 'tipo' => 'Antialergico', 'dosagem' => '10mg', 'instrucoes' => '1 comprimido ao dia'],
+    ['nome' => 'Desloratadina', 'tipo' => 'Antialergico', 'dosagem' => '5mg', 'instrucoes' => '1 comprimido ao deitar'],
+    ['nome' => 'Losartana', 'tipo' => 'Anti-hipertensivo', 'dosagem' => '50mg', 'instrucoes' => '1 comprimido ao dia (Uso contínuo)'],
+    ['nome' => 'Metformina', 'tipo' => 'Antidiabetico', 'dosagem' => '850mg', 'instrucoes' => '1 comprimido após o almoço e o jantar (Uso contínuo)'],
+    ['nome' => 'Simeticona', 'tipo' => 'Antigases', 'dosagem' => '40mg', 'instrucoes' => '1 comprimido a cada 8h, se necessário'],
+    ['nome' => 'Ondansetrona', 'tipo' => 'Antiemetico', 'dosagem' => '4mg', 'instrucoes' => '1 comprimido a cada 8h, se náuseas']
 ];
 ?>
 
@@ -168,7 +170,6 @@ $lista_medicamentos = [
     <link rel="stylesheet" href="medico.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
         .chip-group {
             display: flex;
@@ -267,6 +268,72 @@ $lista_medicamentos = [
             font-weight: 600;
             border: 1px solid rgba(0, 0, 0, 0.05);
         }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: translateY(0);
+        }
+
+        .modal-header-cal {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f5f9;
+            padding-bottom: 10px;
+        }
+
+        .btn-fechar-modal {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-fechar-modal:hover {
+            color: #e74c3c;
+            transform: scale(1.1);
+        }
+
+        .modal-evento-item {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f8fafc;
+        }
     </style>
 </head>
 
@@ -339,7 +406,7 @@ $lista_medicamentos = [
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <h3 class="card-title" style="margin: 0;"><i class='bx bx-line-chart'></i> Consultas da Semana</h3>
-                            <button onclick="showToast('Dados exportados com sucesso!', 'success')" class="export-btn">
+                            <button onclick="exportarConsultasMedico()" class="export-btn">
                                 <i class='bx bx-export'></i> Exportar
                             </button>
                         </div>
@@ -363,7 +430,6 @@ $lista_medicamentos = [
                                 <span class="status-badge <?= $statusClass ?>"><?= $consulta['status_consulta'] ?></span>
                             </div>
                         <?php endforeach; ?>
-
                         <?php if (empty($consultas_hoje)): ?>
                             <p style="color: #7f8c8d; text-align: center; margin-top: 20px;">Nenhuma consulta agendada para a data de hoje.</p>
                         <?php endif; ?>
@@ -377,7 +443,6 @@ $lista_medicamentos = [
                             <canvas id="graficoStatus"></canvas>
                         </div>
                     </div>
-
                     <div class="card">
                         <h3 class="card-title"><i class='bx bx-bolt'></i> Acesso Rápido</h3>
                         <div class="actions-list">
@@ -395,11 +460,9 @@ $lista_medicamentos = [
 
         <div id="tab-consultas" class="tab-content <?= $aba_ativa == 'tab-consultas' ? 'active' : '' ?>">
             <div class="layout-flex">
-
                 <div style="width: 380px; min-width: 320px;">
                     <div class="card">
                         <h3 class="card-title" style="margin-bottom: 10px;"><i class='bx bx-filter-alt'></i> Filtros Visuais</h3>
-
                         <div class="form-group" style="margin-bottom: 5px;">
                             <label>Status da Consulta:</label>
                         </div>
@@ -410,7 +473,6 @@ $lista_medicamentos = [
                             <button class="chip-btn" data-valor="em andamento" onclick="clicarChip(this, 'status')">Em Andamento</button>
                             <button class="chip-btn" data-valor="concluída" onclick="clicarChip(this, 'status')">Concluídas</button>
                         </div>
-
                         <div class="form-group" style="margin-bottom: 5px; margin-top: 15px;">
                             <label>Período (Data):</label>
                         </div>
@@ -419,13 +481,11 @@ $lista_medicamentos = [
                             <button class="chip-btn" data-valor="hoje" onclick="clicarChip(this, 'periodo')">Somente Hoje</button>
                             <button class="chip-btn" data-valor="semana" onclick="clicarChip(this, 'periodo')">Próximos 7 dias</button>
                         </div>
-
                         <div class="form-group" style="margin-top: 15px;">
                             <label>Buscar Paciente:</label>
                             <input type="text" id="buscaPaciente" onkeyup="aplicarFiltros()" placeholder="Digite o nome aqui...">
                         </div>
                     </div>
-
                     <div style="max-height: 500px; overflow-y: auto;" id="listaPacientesConsulta">
                         <?php foreach ($todas_consultas as $consulta):
                             $pac = isset($lista_pacientes[$consulta['id_paciente']]) ? $lista_pacientes[$consulta['id_paciente']] : ['nome' => 'Desconhecido', 'telefone' => '-', 'convenio' => '-'];
@@ -447,22 +507,18 @@ $lista_medicamentos = [
                                 data-retorno="<?= $retorno ?>"
                                 data-status="<?= $consulta['status_consulta'] ?>"
                                 onclick="selecionarAtendimento(this)">
-
                                 <strong><?= $pac['nome'] ?></strong>
                                 <span style="font-size: 0.85rem;"><i class='bx bx-calendar'></i> <?= $data_br ?> às <?= $hora ?></span>
                                 <span style="display:block; font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Status: <?= $consulta['status_consulta'] ?></span>
                             </div>
                         <?php endforeach; ?>
-
                         <p id="msgNenhumEncontrado" style="color: #7f8c8d; text-align: center; padding: 20px; display: none;">Nenhuma consulta encontrada com estes filtros.</p>
                     </div>
                 </div>
-
                 <div class="flex-1">
                     <form method="POST" action="" class="card" id="consultaDetalhes">
                         <input type="hidden" name="id_consulta" id="form_id_consulta" value="">
                         <input type="hidden" name="id_paciente" id="form_id_paciente" value="">
-
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f0f5f9; padding-bottom: 15px; margin-bottom: 20px;">
                             <div style="display: flex; align-items: center; gap: 15px;">
                                 <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--azul-claro-bg); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--azul-primario);">
@@ -474,7 +530,6 @@ $lista_medicamentos = [
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-grid-2">
                             <div class="form-group">
                                 <label>Convênio</label>
@@ -493,22 +548,14 @@ $lista_medicamentos = [
                                 <input type="date" name="data_retorno" id="form_retorno" style="background: var(--cinza-card);">
                             </div>
                         </div>
-
                         <div class="form-group" style="margin-top: 15px;">
                             <label>Anotações Clínicas (Prontuário)</label>
                             <textarea name="observacoes" id="form_obs" rows="6" placeholder="Descreva os sintomas, diagnóstico, pressão arterial e conduta médica..."></textarea>
                         </div>
-
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button type="submit" name="status_consulta" value="Concluída" class="btn-success">
-                                <i class='bx bx-check-circle'></i> Salvar e Concluir
-                            </button>
-                            <button type="submit" name="status_consulta" value="Em Andamento" class="btn-primary">
-                                <i class='bx bx-play-circle'></i> Em Andamento
-                            </button>
-                            <button type="submit" name="status_consulta" value="Cancelada" class="btn-danger">
-                                <i class='bx bx-x-circle'></i> Cancelar
-                            </button>
+                            <button type="submit" name="status_consulta" value="Concluída" class="btn-success"><i class='bx bx-check-circle'></i> Salvar e Concluir</button>
+                            <button type="submit" name="status_consulta" value="Em Andamento" class="btn-primary"><i class='bx bx-play-circle'></i> Em Andamento</button>
+                            <button type="submit" name="status_consulta" value="Cancelada" class="btn-danger"><i class='bx bx-x-circle'></i> Cancelar</button>
                         </div>
                     </form>
                 </div>
@@ -528,11 +575,29 @@ $lista_medicamentos = [
 
         <div id="tab-pacientes" class="tab-content <?= $aba_ativa == 'tab-pacientes' ? 'active' : '' ?>">
             <div class="pacientes-grid">
-                <?php foreach ($lista_pacientes as $pac): ?>
-                    <div class="paciente-card">
+                <?php foreach ($lista_pacientes as $pac):
+                    $idade = calculaIdade($pac['dt_nasc']);
+                    $dt_nasc_fmt = $pac['dt_nasc'] ? date('d/m/Y', strtotime($pac['dt_nasc'])) : 'Não informado';
+                    $email = $pac['email'] ?? 'Não informado';
+                    $cpf = $pac['cpf'] ?? 'Não informado';
+                ?>
+                    <div class="paciente-card"
+                        style="cursor: pointer; transition: 0.2s;"
+                        onmouseover="this.style.transform='translateY(-5px)'"
+                        onmouseout="this.style.transform='translateY(0)'"
+                        onclick="abrirModalPaciente(this)"
+                        data-nome="<?= htmlspecialchars($pac['nome']) ?>"
+                        data-idade="<?= $idade ?>"
+                        data-sangue="<?= htmlspecialchars($pac['tipo_sanguineo']) ?>"
+                        data-convenio="<?= htmlspecialchars($pac['convenio']) ?>"
+                        data-telefone="<?= htmlspecialchars($pac['telefone']) ?>"
+                        data-email="<?= htmlspecialchars($email) ?>"
+                        data-cpf="<?= htmlspecialchars($cpf) ?>"
+                        data-nasc="<?= $dt_nasc_fmt ?>">
+
                         <div class="paciente-avatar"><i class='bx bx-user'></i></div>
                         <h4><?= $pac['nome'] ?></h4>
-                        <p><?= calculaIdade($pac['dt_nasc']) ?> anos | Tipo <?= $pac['tipo_sanguineo'] ?></p>
+                        <p><?= $idade ?> anos | Tipo <?= $pac['tipo_sanguineo'] ?></p>
                         <p><i class='bx bx-health'></i> <?= $pac['convenio'] ?></p>
                         <p style="font-size: 0.75rem; margin-bottom: 15px;">Telefone: <?= $pac['telefone'] ?></p>
                     </div>
@@ -559,7 +624,6 @@ $lista_medicamentos = [
                                 </option>
                             <?php endwhile; ?>
                         </select>
-
                         <h3 class="card-title"><i class='bx bx-plus-medical'></i> 2. Adicionar Medicamentos</h3>
                         <table class="data-table">
                             <thead>
@@ -581,7 +645,6 @@ $lista_medicamentos = [
                         </table>
                     </div>
                 </div>
-
                 <div style="width: 400px;">
                     <div class="card">
                         <h3 class="card-title"><i class='bx bx-receipt'></i> 3. Finalizar Receituário</h3>
@@ -606,15 +669,14 @@ $lista_medicamentos = [
                         <span class="perfil-status">Online</span>
                     </div>
                 </div>
-
                 <div class="flex-1">
                     <div class="card">
-                        <h3 class="card-title"><i class='bx bx-id-card'></i> Informacoes Profissionais</h3>
+                        <h3 class="card-title"><i class='bx bx-id-card'></i> Informações Profissionais</h3>
                         <div class="perfil-info-grid">
                             <div class="perfil-info-item"><label>Nome Completo</label><span><?= $nome_medico ?></span></div>
                             <div class="perfil-info-item"><label>CRM</label><span><?= $crm_medico ?></span></div>
                             <div class="perfil-info-item"><label>Especialidade</label><span>Clínica Médica</span></div>
-                            <div class="perfil-info-item"><label>Email</label><span><?= $email_medico ?></span></div>
+                            <div class="perfil-info-item"><label>Usuário</label><span><?= $email_medico ?></span></div>
                             <div class="perfil-info-item"><label>Telefone</label><span><?= $tel_medico ?></span></div>
                             <div class="perfil-info-item"><label>UBS Vinculada</label><span><?= $ubs_medico ?></span></div>
                         </div>
@@ -622,11 +684,30 @@ $lista_medicamentos = [
                 </div>
             </div>
         </div>
+
+        <div id="modalCalendario" class="modal-overlay" onclick="fecharModalCalendario(event)">
+            <div class="modal-box" onclick="event.stopPropagation()">
+                <div class="modal-header-cal">
+                    <h3 id="modalDataTitulo" style="color: #2C3E50; margin: 0;"><i class='bx bx-calendar'></i> Consultas</h3>
+                    <button class="btn-fechar-modal" onclick="fecharModalCalendario()"><i class='bx bx-x'></i></button>
+                </div>
+                <div id="modalConteudoConsultas" style="max-height: 350px; overflow-y: auto; padding-right: 5px;"></div>
+            </div>
+        </div>
+
+        <div id="modalPaciente" class="modal-overlay" onclick="fecharModalPaciente(event)">
+            <div class="modal-box" onclick="event.stopPropagation()">
+                <div class="modal-header-cal">
+                    <h3 style="color: #2C3E50; margin: 0;"><i class='bx bx-user-pin'></i> Ficha do Paciente</h3>
+                    <button class="btn-fechar-modal" onclick="fecharModalPaciente()"><i class='bx bx-x'></i></button>
+                </div>
+                <div id="modalConteudoPaciente"></div>
+            </div>
+        </div>
     </main>
 
     <script src="medico.js"></script>
     <script>
-
         document.addEventListener('DOMContentLoaded', function() {
             const canvasSemana = document.getElementById('graficoSemana');
             if (canvasSemana) {
@@ -704,7 +785,6 @@ $lista_medicamentos = [
             }
         });
 
-       
         let filtroAtualStatus = 'todas';
         let filtroAtualPeriodo = 'todas';
 
@@ -712,7 +792,6 @@ $lista_medicamentos = [
             const parent = botao.parentElement;
             parent.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
             botao.classList.add('active');
-
             const valor = botao.getAttribute('data-valor');
             if (tipo === 'status') {
                 filtroAtualStatus = valor;
@@ -720,7 +799,6 @@ $lista_medicamentos = [
             if (tipo === 'periodo') {
                 filtroAtualPeriodo = valor;
             }
-
             aplicarFiltros();
         }
 
@@ -741,11 +819,10 @@ $lista_medicamentos = [
                 let rawStatus = item.getAttribute('data-status');
                 const statusItem = rawStatus ? rawStatus.toLowerCase() : '';
                 const dataItem = item.getAttribute('data-data-iso');
-
                 let mostraPorNome = nomeItem.includes(termoBusca);
                 let mostraPorStatus = (filtroAtualStatus === 'todas') || (filtroAtualStatus === statusItem);
-
                 let mostraPorData = false;
+
                 if (filtroAtualPeriodo === 'todas') {
                     mostraPorData = true;
                 } else if (filtroAtualPeriodo === 'hoje') {
@@ -766,8 +843,7 @@ $lista_medicamentos = [
             if (msg) msg.style.display = (qtdVisiveis === 0) ? 'block' : 'none';
         }
 
-
-        const eventosCal = <?= $eventos_js ?>; 
+        const eventosCal = <?= $eventos_js ?>;
         let dataBaseCal = new Date(dataHojeServidor + 'T00:00:00');
         let mesAtual = dataBaseCal.getMonth();
         let anoAtual = dataBaseCal.getFullYear();
@@ -799,7 +875,7 @@ $lista_medicamentos = [
                 let classeHoje = (dataIso === dataHojeServidor) ? 'hoje' : '';
 
                 let eventosDoDia = eventosCal.filter(e => e.data === dataIso);
-                eventosDoDia.sort((a, b) => a.hora.localeCompare(b.hora)); 
+                eventosDoDia.sort((a, b) => a.hora.localeCompare(b.hora));
 
                 let htmlEventos = '';
                 eventosDoDia.forEach(ev => {
@@ -824,7 +900,7 @@ $lista_medicamentos = [
                 });
 
                 grid.innerHTML += `
-                    <div class="calendario-dia ${classeHoje}">
+                    <div class="calendario-dia ${classeHoje}" onclick="abrirModalCalendario('${dataIso}')" style="cursor: pointer;" title="Clique para ver detalhes">
                         <div class="calendario-dia-numero">${dia}</div>
                         ${htmlEventos}
                     </div>
@@ -851,12 +927,10 @@ $lista_medicamentos = [
             renderizarCalendario(mesAtual, anoAtual);
         }
 
- 
         document.addEventListener('DOMContentLoaded', function() {
             aplicarFiltros();
             renderizarCalendario(mesAtual, anoAtual);
         });
-
 
         function selecionarAtendimento(elemento) {
             document.querySelectorAll('.item-consulta').forEach(item => item.classList.remove('active'));
@@ -872,13 +946,12 @@ $lista_medicamentos = [
             document.getElementById('form_retorno').value = elemento.getAttribute('data-retorno');
         }
 
-     
         let receituarioItens = [];
 
         function adicionarMedicamento(nome, dosagem, instrucoes) {
             const existe = receituarioItens.find(item => item.nome === nome);
             if (existe) {
-                alert('Este medicamento já está na lista!');
+                if (typeof showToast === "function") showToast('Medicamento já adicionado!', 'warning');
                 return;
             }
             receituarioItens.push({
@@ -897,7 +970,7 @@ $lista_medicamentos = [
         function atualizarPainelReceituario() {
             const container = document.getElementById('receituarioLista');
             if (receituarioItens.length === 0) {
-                container.innerHTML = `<div style="color: #7f8c8d; padding: 15px 0;">Nenhum medicamento selecionado...</div>`;
+                container.innerHTML = `<div class="receituario-item"><div><div class="med-nome">Selecione um medicamento</div></div></div>`;
                 return;
             }
             container.innerHTML = '';
@@ -908,29 +981,213 @@ $lista_medicamentos = [
                             <div class="med-nome" style="font-weight: 600; color: #2C3E50;">${med.nome}</div>
                             <div class="med-dose" style="font-size: 0.85rem; color: #7f8c8d;">${med.dosagem} - ${med.instrucoes}</div>
                         </div>
-                        <button type="button" onclick="removerMedicamento(${index})" style="background: transparent; border: none; color: #e74c3c; cursor: pointer; font-size: 1.2rem;" title="Retirar">
+                        <button type="button" onclick="removerMedicamento(${index})" style="background: transparent; border: none; color: #e74c3c; cursor: pointer; font-size: 1.2rem;">
                             <i class='bx bx-trash'></i>
                         </button>
                     </div>`;
             });
         }
 
-        const formPrescricao = document.getElementById('formPrescricao');
-        if (formPrescricao) {
-            formPrescricao.onsubmit = function() {
+        const frmPresc = document.getElementById('formPrescricao');
+        if (frmPresc) {
+            frmPresc.onsubmit = function() {
                 const idCons = document.getElementById('select_consulta').value;
                 if (!idCons) {
-                    alert('Por favor, selecione uma consulta (paciente) antes de salvar!');
-                    return false;
-                }
-                if (receituarioItens.length === 0) {
-                    alert('Atenção: Adicione pelo menos um medicamento para salvar a prescrição!');
+                    alert('Selecione uma consulta antes!');
                     return false;
                 }
                 document.getElementById('input_id_consulta').value = idCons;
                 document.getElementById('input_lista_meds').value = JSON.stringify(receituarioItens);
-                return true;
             };
+        }
+
+        function exportarConsultasMedico() {
+            const consultas = [
+                <?php
+                $sql_export = "SELECT c.data_hora_consul, p.nome as paciente, c.tipo_consulta, c.status_consulta 
+                               FROM consultas c 
+                               JOIN registro_usuario p ON c.id_paciente = p.id 
+                               WHERE c.id_log_medico = '$id_login_medico' 
+                               ORDER BY c.data_hora_consul DESC LIMIT 150";
+                $res_exp = $mysqli->query($sql_export);
+                if ($res_exp) {
+                    while ($row = $res_exp->fetch_assoc()) {
+                        $dataF = date('d/m/Y H:i', strtotime($row['data_hora_consul']));
+                        $pac = addslashes($row['paciente']);
+                        $tipo = addslashes($row['tipo_consulta']);
+                        $status = addslashes($row['status_consulta']);
+                        echo "{data:'$dataF', pac:'$pac', tipo:'$tipo', status:'$status'},";
+                    }
+                }
+                ?>
+            ];
+
+            let htmlTable = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        table { border-collapse: collapse; width: 100%; }
+                        th { background-color: #2C82B5; color: white; font-weight: bold; border: 1px solid #ddd; padding: 10px; }
+                        td { border: 1px solid #ddd; padding: 8px; }
+                    </style>
+                </head>
+                <body>
+                <table>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Paciente</th>
+                        <th>Procedimento</th>
+                        <th>Status</th>
+                    </tr>
+            `;
+
+            consultas.forEach((item) => {
+                htmlTable += `
+                    <tr>
+                        <td>${item.data}</td>
+                        <td>${item.pac}</td>
+                        <td>${item.tipo}</td>
+                        <td>${item.status}</td>
+                    </tr>
+                `;
+            });
+
+            htmlTable += "</table></body></html>";
+
+            const blob = new Blob([htmlTable], {
+                type: 'application/vnd.ms-excel'
+            });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "Minhas_Consultas_BioVita.xls";
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            if (typeof showToast === "function") {
+                showToast('Relatório baixado com sucesso!', 'success');
+            }
+        }
+
+        function abrirModalCalendario(dataSelecionada) {
+            const modal = document.getElementById('modalCalendario');
+            const titulo = document.getElementById('modalDataTitulo');
+            const conteudo = document.getElementById('modalConteudoConsultas');
+
+            const partes = dataSelecionada.split('-');
+            titulo.innerHTML = `<i class='bx bx-calendar'></i> Dia ${partes[2]}/${partes[1]}/${partes[0]}`;
+
+            let consultasDoDia = eventosCal.filter(e => e.data === dataSelecionada);
+            consultasDoDia.sort((a, b) => a.hora.localeCompare(b.hora));
+
+            if (consultasDoDia.length === 0) {
+                conteudo.innerHTML = `
+                    <div style="text-align: center; padding: 30px 10px;">
+                        <i class='bx bx-coffee' style="font-size: 3rem; color: #cbd5e1; margin-bottom: 10px;"></i>
+                        <p style="color: #7f8c8d; margin: 0; font-size: 1.1rem;">Não há consultas agendadas para este dia.</p>
+                    </div>`;
+            } else {
+                let htmlStr = '';
+                consultasDoDia.forEach(ev => {
+                    let corBorda = '#3498db';
+                    if (ev.status === 'Cancelada') corBorda = '#e74c3c';
+                    if (ev.status === 'Concluída') corBorda = '#27ae60';
+                    if (ev.status === 'Em Andamento') corBorda = '#f1c40f';
+
+                    htmlStr += `
+                        <div class="modal-evento-item" style="border-left: 5px solid ${corBorda};">
+                            <h4 style="margin: 0 0 5px 0; color: #2C3E50; font-size: 1.05rem;">
+                                <i class='bx bx-time-five' style="color: #7f8c8d;"></i> ${ev.hora}
+                            </h4>
+                            <p style="margin: 0 0 5px 0; color: #34495e; font-weight: 600;">
+                                <i class='bx bx-user' style="color: #7f8c8d;"></i> ${ev.paciente}
+                            </p>
+                            <span style="font-size: 0.8rem; font-weight: bold; background: #e2e8f0; padding: 3px 8px; border-radius: 4px; color: ${corBorda};">
+                                ${ev.status}
+                            </span>
+                        </div>
+                    `;
+                });
+                conteudo.innerHTML = htmlStr;
+            }
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function fecharModalCalendario(event) {
+            if (event && event.target.id !== 'modalCalendario') return;
+            const modal = document.getElementById('modalCalendario');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function abrirModalPaciente(elemento) {
+            const modal = document.getElementById('modalPaciente');
+            const conteudo = document.getElementById('modalConteudoPaciente');
+
+            const nome = elemento.getAttribute('data-nome');
+            const idade = elemento.getAttribute('data-idade');
+            const sangue = elemento.getAttribute('data-sangue');
+            const convenio = elemento.getAttribute('data-convenio');
+            const telefone = elemento.getAttribute('data-telefone');
+            const email = elemento.getAttribute('data-email');
+            const cpf = elemento.getAttribute('data-cpf');
+            const nasc = elemento.getAttribute('data-nasc');
+
+            conteudo.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="width: 70px; height: 70px; background: #f0f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto; font-size: 2.2rem; color: #2C82B5;">
+                        <i class='bx bx-user'></i>
+                    </div>
+                    <h2 style="color: #2C3E50; margin: 0 0 5px 0; font-size: 1.4rem;">${nome}</h2>
+                    <span style="background: #e2e8f0; color: #475569; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">${idade} anos</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <span style="display: block; font-size: 0.7rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 3px;">Nascimento</span>
+                        <span style="color: #2C3E50; font-weight: 600; font-size: 0.95rem;">${nasc}</span>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <span style="display: block; font-size: 0.7rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 3px;">CPF</span>
+                        <span style="color: #2C3E50; font-weight: 600; font-size: 0.95rem;">${cpf}</span>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <span style="display: block; font-size: 0.7rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 3px;">Tipo Sanguíneo</span>
+                        <span style="color: #e74c3c; font-weight: bold; font-size: 0.95rem;">${sangue}</span>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <span style="display: block; font-size: 0.7rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 3px;">Convênio</span>
+                        <span style="color: #27ae60; font-weight: bold; font-size: 0.95rem;">${convenio}</span>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; grid-column: span 2;">
+                        <span style="display: block; font-size: 0.7rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 6px;">Contatos</span>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span style="color: #2C3E50; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                                <i class='bx bx-phone' style="color: #2C82B5; font-size: 1.1rem;"></i> ${telefone}
+                            </span>
+                            <span style="color: #2C3E50; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                                <i class='bx bx-envelope' style="color: #2C82B5; font-size: 1.1rem;"></i> ${email}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function fecharModalPaciente(event) {
+            if (event && event.target.id !== 'modalPaciente') return;
+            const modal = document.getElementById('modalPaciente');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
         }
     </script>
 </body>

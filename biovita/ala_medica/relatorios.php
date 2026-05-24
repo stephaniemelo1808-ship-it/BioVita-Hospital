@@ -9,13 +9,18 @@ if (!isset($_SESSION['tipo_usu']) || $_SESSION['tipo_usu'] !== 'Médico') {
 require_once '../conexao.php';
 $id_login_medico = $_SESSION['id'];
 
-
 if (isset($_GET['excluir_prescricao'])) {
     $id_excluir = (int)$_GET['excluir_prescricao'];
     
     $mysqli->query("DELETE FROM prescricoes WHERE id = $id_excluir");
-    $_SESSION['alerta'] = "Medicamento removido com sucesso!";
     
+    if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
+        header('Content-Type: application/json');
+        echo json_encode(['sucesso' => true]);
+        exit();
+    }
+    
+    $_SESSION['alerta'] = "Medicamento removido com sucesso!";
     header("Location: relatorios.php?t=" . time());
     exit();
 }
@@ -145,7 +150,7 @@ $resultado = $mysqli->query($sql_relatorios);
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: 0.2s;
+            transition: 0.3s ease;
         }
         .btn-del-med {
             color: #ef4444;
@@ -156,6 +161,9 @@ $resultado = $mysqli->query($sql_relatorios);
             font-size: 1.1rem;
             opacity: 0.7;
             transition: 0.2s;
+            cursor: pointer;
+            border: none;
+            background: none;
         }
         .btn-del-med:hover {
             opacity: 1;
@@ -241,12 +249,12 @@ $resultado = $mysqli->query($sql_relatorios);
                                     ?>
                                         <span class="med-tag">
                                             <?= htmlspecialchars($nome_prescricao) ?>
-                                            <a href="?excluir_prescricao=<?= $id_prescricao ?>" 
+                                            <button type="button" 
                                                class="btn-del-med" 
-                                               onclick="event.stopPropagation(); return confirm('Tem certeza que deseja remover [<?= htmlspecialchars($nome_prescricao) ?>] desta receita?')" 
+                                               onclick="excluirMedicamento(event, <?= $id_prescricao ?>, this, '<?= htmlspecialchars($nome_prescricao, ENT_QUOTES) ?>')" 
                                                title="Excluir este medicamento">
                                                 <i class='bx bx-trash'></i>
-                                            </a>
+                                            </button>
                                         </span>
                                     <?php endforeach; ?>
                                 </div>
@@ -287,6 +295,51 @@ $resultado = $mysqli->query($sql_relatorios);
                 cardBody.style.display = 'block';
                 if(toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
             }
+        }
+
+        function excluirMedicamento(event, idPrescricao, elementoBotao, nomeMedicamento) {
+            event.preventDefault(); 
+            event.stopPropagation(); 
+            
+            if (confirm('Tem certeza que deseja remover [' + nomeMedicamento + '] desta receita?')) {
+                fetch('relatorios.php?excluir_prescricao=' + idPrescricao + '&ajax=1')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        const tagMedicamento = elementoBotao.closest('.med-tag');
+                        if (tagMedicamento) {
+                            tagMedicamento.style.opacity = '0';
+                            tagMedicamento.style.transform = 'scale(0.8)';
+                            setTimeout(() => tagMedicamento.remove(), 300);
+                        }
+                        
+                        mostrarToastJS('Medicamento removido com sucesso!');
+                    }
+                })
+                .catch(error => console.error('Erro ao excluir medicamento:', error));
+            }
+        }
+
+        function mostrarToastJS(mensagem) {
+            const toast = document.createElement('div');
+            toast.style.position = 'fixed';
+            toast.style.top = '20px';
+            toast.style.right = '20px';
+            toast.style.backgroundColor = '#2ecc71';
+            toast.style.color = 'white';
+            toast.style.padding = '15px 25px';
+            toast.style.borderRadius = '8px';
+            toast.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+            toast.style.zIndex = '9999';
+            toast.style.transition = 'opacity 0.3s ease';
+            toast.innerHTML = "<i class='bx bx-check-circle'></i> " + mensagem;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         }
     </script>
 </body>

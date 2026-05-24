@@ -197,7 +197,7 @@ $dados_grafico_js = implode(', ', $dados_semana);
                 </button>
             </div>
 
-            <div style="height: 300px;">
+            <div style= "height: 300px;">
                 <canvas id="graficoFluxo"></canvas>
             </div>
         </div>
@@ -206,9 +206,10 @@ $dados_grafico_js = implode(', ', $dados_semana);
             <div class="card" style="margin-bottom: 20px;">
                 <h3 style="margin-bottom: 15px; color: #2C3E50; font-size: 1rem;">Módulo de Gestão</h3>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <a href="relatorios.php" class="btn-primary" style="text-decoration: none; text-align: center; background: #34495e;">
+                    <a href="relatorios_gerais.php?tipo=consultas" class="btn-primary" style="text-decoration: none; text-align: center; background: #34495e;">
                         <i class='bx bx-file'></i> Configurar Relatórios
                     </a>
+                    
                     <a href="usuarios.php" class="btn-primary" style="text-decoration: none; text-align: center;">
                         <i class='bx bx-user-plus'></i> Novo Funcionário
                     </a>

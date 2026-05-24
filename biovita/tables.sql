@@ -13,6 +13,7 @@ create table registro_usuario(
     csn char(15) not null unique,
 	endereco varchar(255) not null,
     dt_nasc date not null,
+    tipo_sanguineo VARCHAR(15) DEFAULT 'Não inf.',
     primary key(id)
 );
 
